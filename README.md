@@ -35,7 +35,7 @@ The five architectures agree on aggregate R² to within 0.0002 and separate only
 - **Code and reported runs:** this repository, release tag `sc26-camera-ready`.
   - `surrogate_models/phase1_lstm_mr/` … `phase5_federated_mr/`: the five reported runs (configuration, data split, training history, per-output metrics, run log and report). The per-output-type results of the paper come from their `metrics.csv` and `phase_summary.json`.
   - `surrogate_models/horizon_eval/`: closed-loop rollout, validity horizons and inference timing (produced by `horizon_rollout_speedup.ipynb`).
-- **Data and model weights:** Zenodo, [doi:10.5281/zenodo.19595930](https://doi.org/10.5281/zenodo.19595930).
+- **Analysis and Simulation Data:** Zenodo, [doi:10.5281/zenodo.19595930](https://doi.org/10.5281/zenodo.19595930).
 - **720-hour training dataset** (128 chunks, used for the reported runs): to be published through this repository once hosting is in place.
 
 ---
