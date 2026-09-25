@@ -14,9 +14,9 @@
 This repository provides deep learning surrogates that replace the FMU-based cooling-system simulator of the [ExaDigiT](https://exadigit.readthedocs.io/). Five architectures are developed, from a baseline LSTM through DeepONet variants to the final **grouped multi-decoder DeepM&Mnet**, and all five are trained and scored on an identical multi-rate task for Summit (257 CDUs, 2,827 outputs).
 
 The grouped multi-decoder DeepM&Mnet (5.87M parameters):
-- **Mean R² = 0.926** (median 0.999) across all 2,827 outputs.
-- **Beats persistence on 1,541 of the 1,799 outputs** that carry learnable structure (85.7%); the remaining 1,028 are persistence-locked.
-- **19,514× faster than the FMU at the 60 s evaluation window**: 4.1 ms per forward for all 257 CDUs against 79.3 s of FMU wall clock (16,093× at the 30 s window). A 10,000-member uncertainty ensemble drops from 220 hours to 41 seconds.
+- Mean R² = 0.926 (median 0.999) across all 2,827 outputs.
+- Beats persistence on 1,541 of the 1,799 outputs that carry learnable structure (85.7%); the remaining 1,028 are persistence-locked.
+- 19,514× faster than the FMU at the 60 s evaluation window: 4.1 ms per forward for all 257 CDUs against 79.3 s of FMU wall clock (16,093× at the 30 s window). A 10,000-member uncertainty ensemble drops from 220 hours to 41 seconds.
 
 The five architectures agree on aggregate R² to within 0.0002 and separate only at long horizons, where the grouped model keeps a closed-loop skill of 0.492 at a 20–30 min lead against 0.083 for the LSTM. Skill against persistence, not R², is the headline metric: several channels sit at a measured noise floor.
 
@@ -26,18 +26,17 @@ The five architectures agree on aggregate R² to within 0.0002 and separate only
 | P2: DeepONet | 55.59M | 0.926 | 0.268 | 4.410 | 17,992× |
 | P3: Hybrid DeepONet | 55.60M | 0.926 | 0.375 | 4.631 | 17,133× |
 | P4: Domain-specific DeepONet | 55.60M | 0.926 | 0.231 | 4.716 | 16,824× |
-| **P5: Grouped multi-decoder DeepM&Mnet** | **5.87M** | 0.926 | **0.492** | **4.066** | **19,514×** |
+| P5: Grouped multi-decoder DeepM&Mnet | **5.87M** | 0.926 | **0.492** | **4.066** | **19,514×** |
 
 ---
 
 ## Artifacts corresponding to the paper
 
-- **Code and reported runs:** this repository, release tag `sc26-camera-ready`.
+- Code and reported runs: this repository, release tag `sc26-camera-ready`.
   - `surrogate_models/phase1_lstm_mr/` … `phase5_federated_mr/`: the five reported runs (configuration, data split, training history, per-output metrics, run log and report). The per-output-type results of the paper come from their `metrics.csv` and `phase_summary.json`.
   - `surrogate_models/horizon_eval/`: closed-loop rollout, validity horizons and inference timing (produced by `horizon_rollout_speedup.ipynb`).
-- **Analysis and Simulation Data:** Zenodo, [doi:10.5281/zenodo.19595930](https://doi.org/10.5281/zenodo.19595930).
-- **720-hour training dataset** (128 chunks, used for the reported runs): to be published through this repository once hosting is in place.
-
+- Data and model weights: Zenodo, [doi:10.5281/zenodo.19595930](https://doi.org/10.5281/zenodo.19595930): simulations of Summit, Marconi100 and Lassen for the data analysis, and 11-hour and 25-hour systematic Summit simulations for sample model training.
+- 720-hour systematic dataset (128 chunks at 1 s, used for the reported runs): not on Zenodo; it will be made available in the future through this repository.
 ---
 
 ## Repository layout
