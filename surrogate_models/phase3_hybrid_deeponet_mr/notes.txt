@@ -1,0 +1,5 @@
+Phase 3 hybrid DeepONet trained MULTI-RATE on the 720 h `systematic-720` data, identical task to run19b and the other phases.
+
+Architecture: phase-2 operator + a learned alpha-blend gate per head (operator vs skip path). NOTE the original single-rate hybrid's CDU-embedding / algebraic pathway has no analogue on the all-CDU store task, so the multi-rate variant keeps only the alpha blend — the component that transfers to this task. Comparing to phase 2 isolates what the blend gate adds.
+
+Read by mean SKILL vs persistence, not mean R².

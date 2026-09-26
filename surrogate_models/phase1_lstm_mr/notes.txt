@@ -1,0 +1,7 @@
+Phase 1 baseline LSTM trained MULTI-RATE on the 720 h `systematic-720` data, on exactly the task run19b (MR-MIONet) was scored on: hydraulics at 3 s with 300 s look-back, thermal/power at 30 s with 1200 s look-back, uniform K=20 horizons (600 s thermal/power, 60 s hydraulic), seeded 80/10/10 chunk split.
+
+Why it exists: until the library gained multi-rate support for phases 1-6, the baselines were trained on a DIFFERENT (single-rate) task than MR-MIONet, so every previous cross-phase comparison was apples to oranges. This run and its siblings put all seven models on one task so the comparison table is honest.
+
+Architecture: per-branch LSTM + temporal attention -> concatenated context -> direct per-head MLP. Deliberately NO operator basis and NO Fourier trunk; phase 1 is the floor those features must beat.
+
+Read the result by mean SKILL vs persistence, not mean R². G_Vs (V_flow_sec) is a measured channel noise floor — the signal-floor diagnostic showed its deltas are temporally white — so a low R² there is expected for every phase and is not a phase-1 failure.

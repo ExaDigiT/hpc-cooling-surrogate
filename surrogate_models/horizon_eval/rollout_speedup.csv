@@ -1,0 +1,6 @@
+model,n_params,ms_per_forward,rollout_s_surrogate,rollout_s_fmu,speedup,horizon_min
+P1 LSTM,20785886,4.289,0.2573,3925.8,15256.8,30.0
+P2 DeepONet,55594626,4.41,0.2646,3925.8,14838.1,30.0
+P3 Hybrid,55597453,4.631,0.2779,3925.8,14127.9,30.0
+P4 Domain,55603107,4.716,0.283,3925.8,13873.3,30.0
+P5 Federated,5868638,4.066,0.2439,3925.8,16093.3,30.0

@@ -1,0 +1,5 @@
+Phase 4 domain-specific DeepONet trained MULTI-RATE on the 720 h `systematic-720` data, identical task to run19b and the other phases.
+
+Architecture: one domain-expert operator head per canonical group with a scale + bias + sigmoid skip gate, over the shared branch encoder bank. In multi-rate mode the six groups (T, V, p, Vs, ps, W) map exactly onto the phase-4 'domains', so this is the most natural multi-rate form of the domain-expert idea. Comparing to phase 2/3 isolates what per-domain specialization buys over a shared operator.
+
+Read by mean SKILL vs persistence, not mean R².

@@ -1,0 +1,5 @@
+Phase 2 basic DeepONet trained MULTI-RATE on the 720 h `systematic-720` data, on the identical task as run19b and the other phases (3 s hydraulics / 30 s thermal-power, seeded 80/10/10 chunk split (seed 42)).
+
+Architecture: per-branch LSTM branch net -> basis coefficients; shared Fourier trunk over physical lead time -> basis; per-head plain operator (coeff x basis). This is the first phase with an operator basis and a trunk; comparing it to phase 1 isolates what those two components add.
+
+Read by mean SKILL vs persistence, not mean R² (G_Vs is a measured channel noise floor for all phases).

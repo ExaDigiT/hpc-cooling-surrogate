@@ -1,0 +1,72 @@
+{
+  "n_outputs": 2827,
+  "mean_r2": 0.9256370639565539,
+  "median_r2": 0.999365467935677,
+  "min_r2": 0.08956429239045127,
+  "beats_frac": 0.6250442164839052,
+  "mean_skill": 0.04881601271781731,
+  "groups": {
+    "G_T": {
+      "n": 1028,
+      "horizon_s": 600,
+      "mean_r2": 0.9972306813516503,
+      "median_r2": 0.9987727354011962,
+      "beats": 997,
+      "beats_frac": 0.9698443579766537,
+      "skill": 0.07662087784016629
+    },
+    "G_V": {
+      "n": 257,
+      "horizon_s": 60,
+      "mean_r2": 0.9997025596061185,
+      "median_r2": 0.9997027780233589,
+      "beats": 0,
+      "beats_frac": 0.0,
+      "skill": 0.0
+    },
+    "G_p": {
+      "n": 514,
+      "horizon_s": 60,
+      "mean_r2": 0.9999814878593147,
+      "median_r2": 0.9999814862001714,
+      "beats": 514,
+      "beats_frac": 1.0,
+      "skill": 0.04517719002596643
+    },
+    "G_Vs": {
+      "n": 257,
+      "horizon_s": 60,
+      "mean_r2": 0.3058761520103648,
+      "median_r2": 0.30600542175926027,
+      "beats": 0,
+      "beats_frac": 0.0,
+      "skill": 0.0
+    },
+    "G_ps": {
+      "n": 514,
+      "horizon_s": 60,
+      "mean_r2": 0.9440137648559828,
+      "median_r2": 0.9447022392460567,
+      "beats": 0,
+      "beats_frac": 0.0,
+      "skill": 0.0
+    },
+    "G_W": {
+      "n": 257,
+      "horizon_s": 600,
+      "mean_r2": 0.9995157610684139,
+      "median_r2": 0.9995176434853038,
+      "beats": 256,
+      "beats_frac": 0.9961089494163424,
+      "skill": 0.1401382484833924
+    }
+  },
+  "run_id": "phase1_lstm_mr",
+  "phase": "1",
+  "arch": "lstm",
+  "model": "MultiRateLSTM",
+  "n_params": 20785886,
+  "train_minutes": 67.57,
+  "best_epoch": 15,
+  "epochs_completed": 35
+}

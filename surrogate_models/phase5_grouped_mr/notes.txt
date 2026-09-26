@@ -1,0 +1,7 @@
+Phase 5 federated DeepMMNet trained MULTI-RATE on the 720 h `systematic-720` data, identical task to run19b and the other phases.
+
+Architecture: per-branch u/y LSTM encoders + one shared Fourier trunk + per-group decoder heads (standard/skip per head_types). This is the in-library ancestor of the MR-MIONet run series: run19b = this backbone PLUS a future-forcing branch, attention fusion, one learnable GatedDeltaHead per group, beta-NLL, and per-head best checkpointing. Phase 5's gap to run19b is exactly the value of those additions.
+
+Two-phase training: round-robin per-head warmup (phase1_epochs) then joint fine-tuning with differential LRs (phase2_epochs).
+
+Read by mean SKILL vs persistence, not mean R².

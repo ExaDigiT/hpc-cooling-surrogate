@@ -1,0 +1,72 @@
+{
+  "n_outputs": 2827,
+  "mean_r2": 0.9257691109541667,
+  "median_r2": 0.9993965588646108,
+  "min_r2": 0.08956429239045127,
+  "beats_frac": 0.629642730810046,
+  "mean_skill": 0.1311086700307626,
+  "groups": {
+    "G_T": {
+      "n": 1028,
+      "horizon_s": 600,
+      "mean_r2": 0.9975775575936692,
+      "median_r2": 0.9990819820028397,
+      "beats": 1009,
+      "beats_frac": 0.9815175097276264,
+      "skill": 0.1843030108174979
+    },
+    "G_V": {
+      "n": 257,
+      "horizon_s": 60,
+      "mean_r2": 0.9997025596061185,
+      "median_r2": 0.9997027780233589,
+      "beats": 0,
+      "beats_frac": 0.0,
+      "skill": 0.0
+    },
+    "G_p": {
+      "n": 514,
+      "horizon_s": 60,
+      "mean_r2": 0.9999850423044222,
+      "median_r2": 0.9999850435030586,
+      "beats": 514,
+      "beats_frac": 1.0,
+      "skill": 0.23051769345499448
+    },
+    "G_Vs": {
+      "n": 257,
+      "horizon_s": 60,
+      "mean_r2": 0.3058761520103648,
+      "median_r2": 0.30600542175926027,
+      "beats": 0,
+      "beats_frac": 0.0,
+      "skill": 0.0
+    },
+    "G_ps": {
+      "n": 514,
+      "horizon_s": 60,
+      "mean_r2": 0.9440137648559828,
+      "median_r2": 0.9447022392460567,
+      "beats": 0,
+      "beats_frac": 0.0,
+      "skill": 0.0
+    },
+    "G_W": {
+      "n": 257,
+      "horizon_s": 600,
+      "mean_r2": 0.9995736641838644,
+      "median_r2": 0.9995874245545381,
+      "beats": 257,
+      "beats_frac": 1.0,
+      "skill": 0.24394794015840804
+    }
+  },
+  "run_id": "phase4_domain_deeponet_mr",
+  "phase": "4",
+  "arch": "domain_deeponet",
+  "model": "MultiRateDomainDeepONet",
+  "n_params": 55603107,
+  "train_minutes": 49.55,
+  "best_epoch": 6,
+  "epochs_completed": 26
+}

@@ -1,0 +1,388 @@
+# Phase 3 (hybrid_deeponet) — `phase3_hybrid_deeponet_mr`
+
+*Generated 2026-08-02 14:17:59 · MultiRateHybridDeepONet · 55,597,453 parameters · 84.7 min*
+
+## Run notes
+
+Phase 3 hybrid DeepONet trained MULTI-RATE on the 720 h `systematic-720` data, identical task to run19b and the other phases.
+
+Architecture: phase-2 operator + a learned alpha-blend gate per head (operator vs skip path). NOTE the original single-rate hybrid's CDU-embedding / algebraic pathway has no analogue on the all-CDU store task, so the multi-rate variant keeps only the alpha blend — the component that transfers to this task. Comparing to phase 2 isolates what the blend gate adds.
+
+Read by mean SKILL vs persistence, not mean R².
+
+## Headline
+
+| metric | value |
+| --- | --- |
+| Outputs | 2827 |
+| Mean R² | 0.9257 |
+| Median R² | 0.9993 |
+| Min R² | 0.0896 |
+| Beats persistence | 56.4% |
+| **Mean skill score** | **+0.1108** |
+
+> Skill vs persistence is the headline metric, not mean R². Several channels sit at their noise floor, where R² is low for *any* predictor including persistence.
+
+## Task (identical across phases 1-6 and run19b)
+
+| group | rate (s) | history | K | window (s) | horizon (s) | branch |
+| --- | --- | --- | --- | --- | --- | --- |
+| G_T | 30 | 40 | 20 | 1200 | 600 | slow |
+| G_V | 3 | 100 | 20 | 300 | 60 | fast |
+| G_p | 3 | 100 | 20 | 300 | 60 | fast |
+| G_Vs | 3 | 100 | 20 | 300 | 60 | fast |
+| G_ps | 3 | 100 | 20 | 300 | 60 | fast |
+| G_W | 30 | 40 | 20 | 1200 | 600 | slow |
+
+| split | chunks | windows |
+| --- | --- | --- |
+| train | [0, 1, 2, 3, 4, 5, 7, 9, 10, 15, 16, 17, 18, 20, 21, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 37, 38, 39, 40, 42, 43, 44, 45, 46, 48, 50, 51, 52, 55, 56, 57, 58, 59, 60, 61, 62, 63, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 98, 99, 100, 101, 103, 104, 105, 106, 108, 110, 111, 112, 115, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127] | 62,934 |
+| val | [6, 11, 19, 22, 35, 41, 47, 49, 54, 64, 102, 114, 116] | 8,021 |
+| test | [8, 12, 13, 14, 36, 53, 65, 66, 77, 97, 107, 109, 113] | 8,021 |
+
+## Per head group
+
+| group | outputs | horizon (s) | mean R² | median R² | beats | mean skill |
+| --- | --- | --- | --- | --- | --- | --- |
+| G_T | 1028 | 600 | 0.9974 | 0.9989 | 845/1028 (82%) | +0.0999 |
+| G_V | 257 | 60 | 0.9997 | 0.9997 | 0/257 (0%) | +0.0000 |
+| G_p | 514 | 60 | 1.0000 | 1.0000 | 514/514 (100%) | +0.3321 |
+| G_Vs | 257 | 60 | 0.3059 | 0.3060 | 0/257 (0%) | +0.0000 |
+| G_ps | 514 | 60 | 0.9440 | 0.9447 | 0/514 (0%) | +0.0000 |
+| G_W | 257 | 600 | 0.9995 | 0.9995 | 236/257 (92%) | +0.1551 |
+
+## Per output type
+
+| Output_Type | R² mean | R² min | RMSE mean | MAE mean | Beats_Persistence mean |
+| --- | --- | --- | --- | --- | --- |
+| T_prim_r | 0.9980 | 0.9965 | 0.1909 | 0.1038 | 0.7821 |
+| T_prim_s | 0.9928 | 0.9909 | 0.4151 | 0.2811 | 0.9961 |
+| T_sec_r | 0.9993 | 0.9987 | 0.1079 | 0.0771 | 0.5875 |
+| T_sec_s | 0.9996 | 0.9992 | 0.0849 | 0.0593 | 0.9222 |
+| V_flow_prim | 0.9997 | 0.9995 | 0.1506 | 0.0436 | 0.0000 |
+| V_flow_sec | 0.3059 | 0.0896 | 0.0045 | 0.0019 | 0.0000 |
+| W_flow | 0.9995 | 0.9992 | 0.0004 | 0.0003 | 0.9183 |
+| p_prim_r | 1.0000 | 1.0000 | 0.0087 | 0.0046 | 1.0000 |
+| p_prim_s | 1.0000 | 1.0000 | 0.0053 | 0.0033 | 1.0000 |
+| p_sec_r | 0.9440 | 0.9060 | 0.0005 | 0.0002 | 0.0000 |
+| p_sec_s | 0.9440 | 0.9060 | 0.0005 | 0.0002 | 0.0000 |
+
+## 20 worst outputs by R²
+
+| Output | Group | R² | Skill_Score | RMSE |
+| --- | --- | --- | --- | --- |
+| simulator[1].datacenter[1].computeBlock[140].cdu[1].summary.V_flow_sec_GPM | G_Vs | 0.0896 | 0.0000 | 0.0058 |
+| simulator[1].datacenter[1].computeBlock[81].cdu[1].summary.V_flow_sec_GPM | G_Vs | 0.1279 | 0.0000 | 0.0054 |
+| simulator[1].datacenter[1].computeBlock[114].cdu[1].summary.V_flow_sec_GPM | G_Vs | 0.1805 | 0.0000 | 0.0054 |
+| simulator[1].datacenter[1].computeBlock[120].cdu[1].summary.V_flow_sec_GPM | G_Vs | 0.1846 | 0.0000 | 0.0055 |
+| simulator[1].datacenter[1].computeBlock[207].cdu[1].summary.V_flow_sec_GPM | G_Vs | 0.2073 | 0.0000 | 0.0050 |
+| simulator[1].datacenter[1].computeBlock[98].cdu[1].summary.V_flow_sec_GPM | G_Vs | 0.2077 | 0.0000 | 0.0047 |
+| simulator[1].datacenter[1].computeBlock[2].cdu[1].summary.V_flow_sec_GPM | G_Vs | 0.2127 | 0.0000 | 0.0049 |
+| simulator[1].datacenter[1].computeBlock[238].cdu[1].summary.V_flow_sec_GPM | G_Vs | 0.2144 | 0.0000 | 0.0048 |
+| simulator[1].datacenter[1].computeBlock[162].cdu[1].summary.V_flow_sec_GPM | G_Vs | 0.2153 | 0.0000 | 0.0044 |
+| simulator[1].datacenter[1].computeBlock[54].cdu[1].summary.V_flow_sec_GPM | G_Vs | 0.2180 | 0.0000 | 0.0051 |
+| simulator[1].datacenter[1].computeBlock[164].cdu[1].summary.V_flow_sec_GPM | G_Vs | 0.2233 | 0.0000 | 0.0049 |
+| simulator[1].datacenter[1].computeBlock[223].cdu[1].summary.V_flow_sec_GPM | G_Vs | 0.2241 | 0.0000 | 0.0047 |
+| simulator[1].datacenter[1].computeBlock[156].cdu[1].summary.V_flow_sec_GPM | G_Vs | 0.2257 | 0.0000 | 0.0046 |
+| simulator[1].datacenter[1].computeBlock[75].cdu[1].summary.V_flow_sec_GPM | G_Vs | 0.2267 | 0.0000 | 0.0046 |
+| simulator[1].datacenter[1].computeBlock[174].cdu[1].summary.V_flow_sec_GPM | G_Vs | 0.2270 | 0.0000 | 0.0049 |
+| simulator[1].datacenter[1].computeBlock[161].cdu[1].summary.V_flow_sec_GPM | G_Vs | 0.2281 | 0.0000 | 0.0047 |
+| simulator[1].datacenter[1].computeBlock[48].cdu[1].summary.V_flow_sec_GPM | G_Vs | 0.2316 | 0.0000 | 0.0051 |
+| simulator[1].datacenter[1].computeBlock[1].cdu[1].summary.V_flow_sec_GPM | G_Vs | 0.2365 | 0.0000 | 0.0047 |
+| simulator[1].datacenter[1].computeBlock[25].cdu[1].summary.V_flow_sec_GPM | G_Vs | 0.2372 | 0.0000 | 0.0044 |
+| simulator[1].datacenter[1].computeBlock[101].cdu[1].summary.V_flow_sec_GPM | G_Vs | 0.2385 | 0.0000 | 0.0051 |
+
+## Figures
+
+### Training and validation loss per epoch.
+
+![Training and validation loss per epoch.](training_curves.png)
+
+### Skill and beats-persistence fraction versus lead time.
+
+![Skill and beats-persistence fraction versus lead time.](skill_vs_lead.png)
+
+### Mean absolute error across the horizon, model versus persistence, per head.
+
+![Mean absolute error across the horizon, model versus persistence, per head.](error_accum.png)
+
+### Per-head-group skill and beats-persistence.
+
+![Per-head-group skill and beats-persistence.](group_summary.png)
+
+## Full console log
+
+```text
+[ddp] rank 0/8 local_rank 0 device cuda:0  visible=8
+==========================================================================
+PHASE 3 — hybrid_deeponet   [phase3_hybrid_deeponet_mr]
+==========================================================================
+device: cuda:0
+multi_rate: True   store rates (s): [3, 30]
+group   rate(s)  history    K  window(s)  horizon(s)  branch
+G_T          30       40   20       1200         600  slow
+G_V           3      100   20        300          60  fast
+G_p           3      100   20        300          60  fast
+G_Vs          3      100   20        300          60  fast
+G_ps          3      100   20        300          60  fast
+G_W          30       40   20       1200         600  slow
+
+============================================================
+COLUMN IDENTIFICATION (Federated)
+============================================================
+Input columns:              515
+Total dynamic outputs:      2827
+  G_T  (temperatures):      1028
+  G_V  (prim flow):         257
+  G_p  (prim pressure):     514
+  G_Vs (sec flow):          257
+  G_ps (sec pressure):      514
+  G_W  (pump power):        257
+  Per-type index maps:      11 types
+
+inputs: 515   dynamic outputs: 2827
+[store] present, reusing: /lustre/orion/scratch/yishak_tadele/gen053/summit/data/systematic-720/store
+[norm] loading shared normalizer: /lustre/orion/scratch/yishak_tadele/gen053/summit/data/systematic-720/store/normalizer_shared.json
+FederatedNormalizer loaded from /lustre/orion/scratch/yishak_tadele/gen053/summit/data/systematic-720/store/normalizer_shared.json
+loader workers: 6   batch: 32
+Federated store [chunk split]: train=[0, 1, 2, 3, 4, 5, 7, 9, 10, 15, 16, 17, 18, 20, 21, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 37, 38, 39, 40, 42, 43, 44, 45, 46, 48, 50, 51, 52, 55, 56, 57, 58, 59, 60, 61, 62, 63, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 98, 99, 100, 101, 103, 104, 105, 106, 108, 110, 111, 112, 115, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127] val=[6, 11, 19, 22, 35, 41, 47, 49, 54, 64, 102, 114, 116] test=[8, 12, 13, 14, 36, 53, 65, 66, 77, 97, 107, 109, 113] | multi_rate=True rates=[3, 30]
+  windows: train=62934 val=8021 test=8021
+[ddp] train sharded: 62934 windows / 8 ranks = ~7866 each; 245 steps/rank/epoch
+DATA MANIFEST: {'train_chunks': [0, 1, 2, 3, 4, 5, 7, 9, 10, 15, 16, 17, 18, 20, 21, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 37, 38, 39, 40, 42, 43, 44, 45, 46, 48, 50, 51, 52, 55, 56, 57, 58, 59, 60, 61, 62, 63, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 98, 99, 100, 101, 103, 104, 105, 106, 108, 110, 111, 112, 115, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127], 'val_chunks': [6, 11, 19, 22, 35, 41, 47, 49, 54, 64, 102, 114, 116], 'test_chunks': [8, 12, 13, 14, 36, 53, 65, 66, 77, 97, 107, 109, 113], 'windows': {'train': 62934, 'val': 8021, 'test': 8021}}
+
+model: MultiRateHybridDeepONet   parameters: 55,597,453
+
+--------------------------------------------------------------------------
+TRAINING
+--------------------------------------------------------------------------
+Distributed training: rank 0/8
+
+======================================================================
+PER-HEAD LOSS NORMALISATION (persistence baseline)
+======================================================================
+  head       baseline    cfg_w    effective
+  G_T    3.384053e-05     1.00   2.9550e+04
+  G_V    4.815543e-05     0.00   0.0000e+00
+  G_p    1.583450e-06     1.00   6.3153e+05
+  G_Vs   4.255081e-03     0.00   0.0000e+00
+  G_ps   3.809307e-03     0.00   0.0000e+00
+  G_W    1.562183e-05     1.00   6.4013e+04
+
+
+======================================================================
+TRAINING — Phase: HYBRID_DEEPONET
+======================================================================
+
+columns: ep | train/val total loss | best epoch | per-head val
+         time line: wall (train/val) | throughput | steps | lr | peak GPU | v/t ratio | elapsed | ETA
+ep   1/100  train 2.21236  val 2.59102  best@1  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  125.1s (tr  69.4 va  55.7)       904 samp/s   245 steps  lr 9.94e-04  gpu  1.25GiB  v/t  1.17  elapsed   2.1m  ETA   206m
+  EarlyStopping: New best val_loss=2.591021
+ep   2/100  train 1.44224  val 2.48967  best@2  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.5s (tr  59.7 va  54.8)     1,051 samp/s   245 steps  lr 9.76e-04  gpu  1.25GiB  v/t  1.73  elapsed   4.0m  ETA   187m
+  EarlyStopping: New best val_loss=2.489668
+ep   3/100  train 1.24572  val 2.67381  best@2  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.8s (tr  59.6 va  55.2)     1,053 samp/s   245 steps  lr 9.46e-04  gpu  1.25GiB  v/t  2.15  elapsed   5.9m  ETA   186m
+  EarlyStopping: No improvement for 1/20 epochs
+ep   4/100  train 1.16739  val 2.49293  best@2  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.6s (tr  59.4 va  55.2)     1,056 samp/s   245 steps  lr 9.05e-04  gpu  1.25GiB  v/t  2.14  elapsed   7.8m  ETA   183m
+  EarlyStopping: No improvement for 2/20 epochs
+ep   5/100  train 1.10760  val 2.52240  best@2  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.4s (tr  59.4 va  55.0)     1,055 samp/s   245 steps  lr 8.54e-04  gpu  1.25GiB  v/t  2.28  elapsed   9.7m  ETA   181m
+  EarlyStopping: No improvement for 3/20 epochs
+ep   6/100  train 1.05829  val 2.44565  best@6  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.2s (tr  59.2 va  55.0)     1,059 samp/s   245 steps  lr 7.94e-04  gpu  1.25GiB  v/t  2.31  elapsed  11.6m  ETA   179m
+  EarlyStopping: New best val_loss=2.445648
+ep   7/100  train 1.04667  val 2.43981  best@7  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.5s (tr  59.5 va  55.1)     1,055 samp/s   245 steps  lr 7.27e-04  gpu  1.25GiB  v/t  2.33  elapsed  13.5m  ETA   178m
+  EarlyStopping: New best val_loss=2.439811
+ep   8/100  train 1.00608  val 2.53944  best@7  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.8s (tr  59.7 va  55.1)     1,051 samp/s   245 steps  lr 6.55e-04  gpu  1.25GiB  v/t  2.52  elapsed  15.5m  ETA   176m
+  EarlyStopping: No improvement for 1/20 epochs
+ep   9/100  train 1.00121  val 2.43307  best@9  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.8s (tr  59.7 va  55.1)     1,051 samp/s   245 steps  lr 5.78e-04  gpu  1.25GiB  v/t  2.43  elapsed  17.4m  ETA   174m
+  EarlyStopping: New best val_loss=2.433075
+ep  10/100  train 0.99455  val 2.50001  best@9  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.3s (tr  59.3 va  55.1)     1,058 samp/s   245 steps  lr 5.00e-04  gpu  1.25GiB  v/t  2.51  elapsed  19.3m  ETA   172m
+  EarlyStopping: No improvement for 1/20 epochs
+ep  11/100  train 0.97145  val 2.52492  best@9  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.7s (tr  59.6 va  55.1)     1,052 samp/s   245 steps  lr 4.22e-04  gpu  1.25GiB  v/t  2.60  elapsed  21.2m  ETA   170m
+  EarlyStopping: No improvement for 2/20 epochs
+ep  12/100  train 0.96458  val 2.46823  best@9  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  115.1s (tr  60.2 va  54.8)     1,041 samp/s   245 steps  lr 3.45e-04  gpu  1.25GiB  v/t  2.56  elapsed  23.1m  ETA   169m
+  EarlyStopping: No improvement for 3/20 epochs
+ep  13/100  train 0.95005  val 2.49768  best@9  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.7s (tr  59.8 va  54.9)     1,049 samp/s   245 steps  lr 2.73e-04  gpu  1.25GiB  v/t  2.63  elapsed  25.0m  ETA   166m
+  EarlyStopping: No improvement for 4/20 epochs
+ep  14/100  train 0.94313  val 2.50295  best@9  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.6s (tr  59.6 va  55.0)     1,052 samp/s   245 steps  lr 2.06e-04  gpu  1.25GiB  v/t  2.65  elapsed  26.9m  ETA   164m
+  EarlyStopping: No improvement for 5/20 epochs
+ep  15/100  train 0.93581  val 2.49206  best@9  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.6s (tr  59.5 va  55.1)     1,054 samp/s   245 steps  lr 1.46e-04  gpu  1.25GiB  v/t  2.66  elapsed  28.8m  ETA   162m
+  EarlyStopping: No improvement for 6/20 epochs
+ep  16/100  train 0.93422  val 2.49202  best@9  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.7s (tr  59.5 va  55.2)     1,054 samp/s   245 steps  lr 9.55e-05  gpu  1.25GiB  v/t  2.67  elapsed  30.7m  ETA   161m
+  EarlyStopping: No improvement for 7/20 epochs
+ep  17/100  train 0.93047  val 2.47484  best@9  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.4s (tr  59.2 va  55.2)     1,060 samp/s   245 steps  lr 5.45e-05  gpu  1.25GiB  v/t  2.66  elapsed  32.7m  ETA   158m
+  EarlyStopping: No improvement for 8/20 epochs
+ep  18/100  train 0.92755  val 2.47720  best@9  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.4s (tr  59.3 va  55.1)     1,058 samp/s   245 steps  lr 2.45e-05  gpu  1.25GiB  v/t  2.67  elapsed  34.6m  ETA   156m
+  EarlyStopping: No improvement for 9/20 epochs
+ep  19/100  train 0.92547  val 2.48196  best@9  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.4s (tr  59.2 va  55.2)     1,060 samp/s   245 steps  lr 6.16e-06  gpu  1.25GiB  v/t  2.68  elapsed  36.5m  ETA   154m
+  EarlyStopping: No improvement for 10/20 epochs
+ep  20/100  train 0.92677  val 2.47995  best@9  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.5s (tr  59.1 va  55.4)     1,061 samp/s   245 steps  lr 1.00e-03  gpu  1.25GiB  v/t  2.68  elapsed  38.4m  ETA   153m
+  EarlyStopping: No improvement for 11/20 epochs
+ep  21/100  train 0.97911  val 2.45759  best@9  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.8s (tr  59.5 va  55.3)     1,054 samp/s   245 steps  lr 9.98e-04  gpu  1.25GiB  v/t  2.51  elapsed  40.3m  ETA   151m
+  EarlyStopping: No improvement for 12/20 epochs
+ep  22/100  train 0.97169  val 2.49210  best@9  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.2s (tr  59.2 va  55.0)     1,060 samp/s   245 steps  lr 9.94e-04  gpu  1.25GiB  v/t  2.56  elapsed  42.2m  ETA   149m
+  EarlyStopping: No improvement for 13/20 epochs
+ep  23/100  train 0.97349  val 2.46454  best@9  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.2s (tr  59.3 va  54.9)     1,058 samp/s   245 steps  lr 9.86e-04  gpu  1.25GiB  v/t  2.53  elapsed  44.1m  ETA   147m
+  EarlyStopping: No improvement for 14/20 epochs
+ep  24/100  train 0.95872  val 2.40244  best@24  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.9s (tr  59.7 va  55.2)     1,051 samp/s   245 steps  lr 9.76e-04  gpu  1.25GiB  v/t  2.51  elapsed  46.0m  ETA   146m
+  EarlyStopping: New best val_loss=2.402444
+ep  25/100  train 0.95469  val 2.50920  best@24  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.5s (tr  59.2 va  55.3)     1,059 samp/s   245 steps  lr 9.62e-04  gpu  1.25GiB  v/t  2.63  elapsed  47.9m  ETA   143m
+  EarlyStopping: No improvement for 1/20 epochs
+ep  26/100  train 0.94382  val 2.49114  best@24  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.5s (tr  59.5 va  55.0)     1,053 samp/s   245 steps  lr 9.46e-04  gpu  1.25GiB  v/t  2.64  elapsed  49.8m  ETA   141m
+  EarlyStopping: No improvement for 2/20 epochs
+ep  27/100  train 0.93399  val 2.44361  best@24  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.7s (tr  59.7 va  55.0)     1,050 samp/s   245 steps  lr 9.26e-04  gpu  1.25GiB  v/t  2.62  elapsed  51.7m  ETA   140m
+  EarlyStopping: No improvement for 3/20 epochs
+ep  28/100  train 0.92531  val 2.42882  best@24  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.8s (tr  59.7 va  55.1)     1,050 samp/s   245 steps  lr 9.05e-04  gpu  1.25GiB  v/t  2.62  elapsed  53.7m  ETA   138m
+  EarlyStopping: No improvement for 4/20 epochs
+ep  29/100  train 0.92783  val 2.43563  best@24  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.6s (tr  59.7 va  54.9)     1,051 samp/s   245 steps  lr 8.80e-04  gpu  1.25GiB  v/t  2.63  elapsed  55.6m  ETA   136m
+  EarlyStopping: No improvement for 5/20 epochs
+ep  30/100  train 0.92484  val 2.41610  best@24  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.9s (tr  59.9 va  55.0)     1,047 samp/s   245 steps  lr 8.54e-04  gpu  1.25GiB  v/t  2.61  elapsed  57.5m  ETA   134m
+  EarlyStopping: No improvement for 6/20 epochs
+ep  31/100  train 0.91827  val 2.46176  best@24  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.7s (tr  59.5 va  55.2)     1,053 samp/s   245 steps  lr 8.25e-04  gpu  1.25GiB  v/t  2.68  elapsed  59.4m  ETA   132m
+  EarlyStopping: No improvement for 7/20 epochs
+ep  32/100  train 0.91561  val 2.48162  best@24  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.8s (tr  59.6 va  55.2)     1,053 samp/s   245 steps  lr 7.94e-04  gpu  1.25GiB  v/t  2.71  elapsed  61.3m  ETA   130m
+  EarlyStopping: No improvement for 8/20 epochs
+ep  33/100  train 0.91377  val 2.47274  best@24  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.7s (tr  59.7 va  54.9)     1,050 samp/s   245 steps  lr 7.61e-04  gpu  1.25GiB  v/t  2.71  elapsed  63.2m  ETA   128m
+  EarlyStopping: No improvement for 9/20 epochs
+ep  34/100  train 0.91008  val 2.46307  best@24  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.8s (tr  59.7 va  55.0)     1,050 samp/s   245 steps  lr 7.27e-04  gpu  1.25GiB  v/t  2.71  elapsed  65.1m  ETA   126m
+  EarlyStopping: No improvement for 10/20 epochs
+ep  35/100  train 0.90763  val 2.44882  best@24  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.8s (tr  59.6 va  55.2)     1,052 samp/s   245 steps  lr 6.91e-04  gpu  1.25GiB  v/t  2.70  elapsed  67.0m  ETA   124m
+  EarlyStopping: No improvement for 11/20 epochs
+ep  36/100  train 0.90672  val 2.45002  best@24  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.8s (tr  59.4 va  55.4)     1,055 samp/s   245 steps  lr 6.55e-04  gpu  1.25GiB  v/t  2.70  elapsed  69.0m  ETA   123m
+  EarlyStopping: No improvement for 12/20 epochs
+ep  37/100  train 0.89981  val 2.45358  best@24  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.4s (tr  59.3 va  55.1)     1,058 samp/s   245 steps  lr 6.17e-04  gpu  1.25GiB  v/t  2.73  elapsed  70.9m  ETA   120m
+  EarlyStopping: No improvement for 13/20 epochs
+ep  38/100  train 0.89944  val 2.45568  best@24  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.7s (tr  59.5 va  55.3)     1,054 samp/s   245 steps  lr 5.78e-04  gpu  1.25GiB  v/t  2.73  elapsed  72.8m  ETA   119m
+  EarlyStopping: No improvement for 14/20 epochs
+ep  39/100  train 0.89686  val 2.42465  best@24  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.5s (tr  59.3 va  55.2)     1,057 samp/s   245 steps  lr 5.39e-04  gpu  1.25GiB  v/t  2.70  elapsed  74.7m  ETA   116m
+  EarlyStopping: No improvement for 15/20 epochs
+ep  40/100  train 0.89499  val 2.52064  best@24  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.5s (tr  59.4 va  55.1)     1,056 samp/s   245 steps  lr 5.00e-04  gpu  1.25GiB  v/t  2.82  elapsed  76.6m  ETA   114m
+  EarlyStopping: No improvement for 16/20 epochs
+ep  41/100  train 0.89641  val 2.48609  best@24  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.4s (tr  59.4 va  55.0)     1,056 samp/s   245 steps  lr 4.61e-04  gpu  1.25GiB  v/t  2.77  elapsed  78.5m  ETA   112m
+  EarlyStopping: No improvement for 17/20 epochs
+ep  42/100  train 0.89364  val 2.46301  best@24  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  115.0s (tr  59.7 va  55.3)     1,050 samp/s   245 steps  lr 4.22e-04  gpu  1.25GiB  v/t  2.76  elapsed  80.4m  ETA   111m
+  EarlyStopping: No improvement for 18/20 epochs
+ep  43/100  train 0.89103  val 2.46886  best@24  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.2s (tr  59.2 va  55.0)     1,059 samp/s   245 steps  lr 3.83e-04  gpu  1.25GiB  v/t  2.77  elapsed  82.3m  ETA   108m
+  EarlyStopping: No improvement for 19/20 epochs
+ep  44/100  train 0.89205  val 2.49707  best@24  G_T=0.0000 G_V=0.0001 G_Vs=0.0042 G_W=0.0000 G_p=0.0000 G_ps=0.0037 raw_total=0.0080
+        time  114.9s (tr  59.8 va  55.1)     1,049 samp/s   245 steps  lr 3.45e-04  gpu  1.25GiB  v/t  2.80  elapsed  84.2m  ETA   107m
+  EarlyStopping: No improvement for 20/20 epochs
+
+Early stopping at epoch 44
+  EarlyStopping: Restored best weights from epoch 23
+
+Training complete.
+  Epochs trained:       44
+  Best validation loss: 2.402444
+  Training time:        5054.1s (84.2 min)
+
+training done in 84.7 min   best val 2.402444 @ epoch 24
+FederatedNormalizer saved to runs/phase3_hybrid_deeponet_mr/normalizer.json
+
+--------------------------------------------------------------------------
+EVALUATION (test split)
+--------------------------------------------------------------------------
+======================================================================
+RESULTS SUMMARY — phase3_hybrid_deeponet_mr
+======================================================================
+
+--- All 2827 Outputs ---
+  Mean/Median R²:    0.9257 / 0.9993
+  Min R²:            0.0896
+  Beats Persistence: 1595/2827 (56.4%)
+  Mean Skill Score:  +0.1108
+
+--- Per Decoder Head Group ---
+
+  G_T (1028 outputs, horizon 600s):
+    Mean/Median R²: 0.9974 / 0.9989   Beats: 845/1028 (82.2%)   Skill: +0.0999   R²-margin: +2.90e-04
+
+  G_V (257 outputs, horizon 60s):
+    Mean/Median R²: 0.9997 / 0.9997   Beats: 0/257 (0.0%)   Skill: +0.0000   R²-margin: +0.00e+00
+
+  G_p (514 outputs, horizon 60s):
+    Mean/Median R²: 1.0000 / 1.0000   Beats: 514/514 (100.0%)   Skill: +0.3321   R²-margin: +6.35e-06
+
+  G_Vs (257 outputs, horizon 60s):
+    Mean/Median R²: 0.3059 / 0.3060   Beats: 0/257 (0.0%)   Skill: +0.0000   R²-margin: +0.00e+00
+
+  G_ps (514 outputs, horizon 60s):
+    Mean/Median R²: 0.9440 / 0.9447   Beats: 0/514 (0.0%)   Skill: +0.0000   R²-margin: +0.00e+00
+
+  G_W (257 outputs, horizon 600s):
+    Mean/Median R²: 0.9995 / 0.9995   Beats: 236/257 (91.8%)   Skill: +0.1551   R²-margin: +9.32e-05
+
+--- Per Output Type ---
+                 R²            RMSE     MAE Beats_Persistence Variance_Ratio
+               mean     min    mean    mean              mean           mean
+Output_Type                                                                 
+T_prim_r     0.9980  0.9965  0.1909  0.1038            0.7821         1.0135
+T_prim_s     0.9928  0.9909  0.4151  0.2811            0.9961         0.9850
+T_sec_r      0.9993  0.9987  0.1079  0.0771            0.5875         1.0056
+T_sec_s      0.9996  0.9992  0.0849  0.0593            0.9222         1.0046
+V_flow_prim  0.9997  0.9995  0.1506  0.0436            0.0000         1.0029
+V_flow_sec   0.3059  0.0896  0.0045  0.0019            0.0000         0.9997
+W_flow       0.9995  0.9992  0.0004  0.0003            0.9183         1.0046
+p_prim_r     1.0000  1.0000  0.0087  0.0046            1.0000         0.9990
+p_prim_s     1.0000  1.0000  0.0053  0.0033            1.0000         0.9999
+p_sec_r      0.9440  0.9060  0.0005  0.0002            0.0000         1.0015
+p_sec_s      0.9440  0.9060  0.0005  0.0002            0.0000         1.0015
+```
+
+## Artifacts
+
+- `config.json`
+- `data_manifest.json`
+- `error_accum.png`
+- `group_summary.png`
+- `history.json`
+- `metrics.csv`
+- `model.pt`
+- `normalizer.json`
+- `notes.txt`
+- `per_step.npy`
+- `phase_summary.json`
+- `report.md`
+- `run_log.txt`
+- `skill_vs_lead.png`
+- `training_curves.png`
