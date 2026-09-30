@@ -4,6 +4,7 @@ import logging
 from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass
 from enum import Enum
+from fmu2ml.config.fmu_io import FMUInputSpec, is_ambient_col
 
 
 class ValidationLevel(Enum):
@@ -241,7 +242,7 @@ class DataValidator:
             # Check T_Air columns
             temp_cols = [col for col in data.columns 
                         if 'T_Air' in col and 'computeBlock' in col]
-            if len(temp_cols) < expected_power_cols:
+            if self._fmu_input_spec().has_t_air and len(temp_cols) < expected_power_cols:
                 results.append(ValidationResult(
                     level=ValidationLevel.WARNING,
                     message=f"Incomplete CDU temperature data: {len(temp_cols)}/{expected_power_cols} CDUs",
@@ -277,7 +278,7 @@ class DataValidator:
                 pct = (count / len(data)) * 100
                 
                 # More strict for critical columns
-                if 'T_ext' in col or 'Q_flow_total' in col:
+                if is_ambient_col(col) or 'Q_flow_total' in col:
                     level = ValidationLevel.ERROR if pct > 1 else ValidationLevel.WARNING
                 else:
                     level = ValidationLevel.ERROR if pct > 10 else ValidationLevel.WARNING
@@ -632,8 +633,8 @@ class DataValidator:
                 return (self.constraints['temperature_kelvin']['air_min'],
                        self.constraints['temperature_kelvin']['air_max'])
             
-            # External temperature (T_ext) - in Kelvin
-            if 'T_ext' in col:
+            # External temperature (T_ext, or Towb on Frontier) - in Kelvin
+            if is_ambient_col(col):
                 return (self.constraints['temperature_kelvin']['ambient_min'],
                        self.constraints['temperature_kelvin']['ambient_max'])
         
@@ -679,20 +680,29 @@ class DataValidator:
         
         return None
     
+    def _fmu_input_spec(self) -> FMUInputSpec:
+        """FMU input layout from the system config (POWER9 layout if unknown)."""
+        if isinstance(self.config, dict) and 'NUM_CDUS' in self.config:
+            return FMUInputSpec.from_config(self.config, n_cdus=self.num_cdus)
+        return FMUInputSpec(n_cdus=self.num_cdus)
+    
     def _get_required_input_columns(self) -> List[str]:
         """Get required input columns for datacenter cooling"""
         required = []
         
+        spec = self._fmu_input_spec()
+        
         # CDU power inputs
         for i in range(1, self.num_cdus + 1):
-            required.append(f'simulator_1_datacenter_1_computeBlock_{i}_cabinet_1_sources_Q_flow_total')
+            required.append(spec.q_flow_col(i))
         
-        # CDU air temperature inputs
-        for i in range(1, self.num_cdus + 1):
-            required.append(f'simulator_1_datacenter_1_computeBlock_{i}_cabinet_1_sources_T_Air')
+        # CDU air temperature inputs (absent on Frontier)
+        if spec.has_t_air:
+            for i in range(1, self.num_cdus + 1):
+                required.append(spec.t_air_col(i))
         
         # External temperature
-        required.append('simulator_1_centralEnergyPlant_1_coolingTowerLoop_1_sources_T_ext')
+        required.append(spec.t_ext_col)
         
         return required
     

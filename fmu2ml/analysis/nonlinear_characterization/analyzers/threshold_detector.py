@@ -20,6 +20,7 @@ from dask import delayed
 from dask.distributed import Client, LocalCluster
 
 from raps.config import ConfigManager
+from fmu2ml.config.fmu_io import FMUInputSpec, is_ambient_col
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +65,8 @@ class ThresholdDetector:
         self.memory_limit = memory_limit
         self.max_breakpoints = max_breakpoints
         
-        self.input_vars = ['Q_flow', 'T_Air', 'T_ext']
+        # Q_flow[, T_Air], T_ext: T_Air only where the FMU has it (not Frontier)
+        self.input_vars = FMUInputSpec.from_config(self.config).input_vars()
         self.output_vars = [
             'V_flow_prim_GPM', 'V_flow_sec_GPM', 'W_flow_CDUP_kW',
             'T_prim_s_C', 'T_prim_r_C', 'T_sec_s_C', 'T_sec_r_C',

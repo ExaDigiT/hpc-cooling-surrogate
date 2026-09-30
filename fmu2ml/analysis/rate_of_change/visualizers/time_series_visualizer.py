@@ -38,7 +38,8 @@ def create_time_series_overlay_plots(
     
     os.makedirs(output_dir, exist_ok=True)
     
-    input_vars = ['Q_flow', 'T_Air', 'T_ext']
+    # T_Air is absent for FMUs without that input (Frontier)
+    input_vars = [v for v in ['Q_flow', 'T_Air', 'T_ext'] if v in prepared_data['inputs']]
     key_outputs = ['T_prim_r_C', 'W_flow_CDUP_kW', 'V_flow_prim_GPM']
     
     # Determine sample range

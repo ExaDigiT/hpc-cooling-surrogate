@@ -27,6 +27,7 @@ class SystemName(Enum):
     SUMMIT = "summit"
     LASSEN = "lassen"
     MARCONI100 = "marconi100"
+    FRONTIER = "frontier"
 
 
 class DomainType(Enum):
@@ -59,6 +60,13 @@ SYSTEM_DEFAULTS: Dict[str, Dict[str, Any]] = {
         "NODES_PER_RACK": 20,
         "MIN_POWER": 0,
         "MAX_POWER": 50,
+    },
+    "frontier": {
+        "NUM_CDUS": 25,
+        "RACKS_PER_CDU": 3,
+        "NODES_PER_RACK": 128,
+        "MIN_POWER": 287.6224,
+        "MAX_POWER": 1135.7857,
     },
 }
 

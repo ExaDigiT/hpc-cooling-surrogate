@@ -12,6 +12,7 @@ from dask import delayed
 from dask.distributed import Client, LocalCluster
 import multiprocessing as mp
 from functools import partial
+from fmu2ml.config.fmu_io import FMUInputSpec, is_ambient_col
 
 logger = logging.getLogger(__name__)
 
@@ -687,7 +688,7 @@ class DataGenerator:
         
         try:
             results_df = self.simulator.run_simulation(
-                input_data=input_df,
+                input_data=FMUInputSpec.from_config(self.simulator.config).adapt_frame(input_df),
                 stabilization_hours=3,  
                 step_size=1,
                 save_history=False

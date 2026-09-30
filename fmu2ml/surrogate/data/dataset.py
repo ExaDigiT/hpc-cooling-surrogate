@@ -532,7 +532,7 @@ def _dominant_period(x: np.ndarray, min_lag: int, max_lag: int,
 def measure_dominant_cycle(
     data: np.ndarray,
     col_names: List[str],
-    prefer_substrings: Tuple[str, ...] = ('t_ext', 'q_flow', 'qflow'),
+    prefer_substrings: Tuple[str, ...] = ('t_ext', 'towb', 'q_flow', 'qflow'),
     min_lag: int = 2,
     max_lag: Optional[int] = None,
 ) -> Optional[int]:

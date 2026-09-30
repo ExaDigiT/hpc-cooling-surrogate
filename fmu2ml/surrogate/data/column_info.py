@@ -10,6 +10,7 @@ from typing import Dict, List, Any, Optional, Tuple
 import re
 import pandas as pd
 
+from fmu2ml.config.fmu_io import is_ambient_col
 from ..architecture.configs import (
     SurrogateConfig,
     DomainDeepONetConfig,
@@ -148,9 +149,9 @@ def build_column_info(
     if t_ext_pattern and t_ext_pattern in df.columns:
         result['input_cols'].append(t_ext_pattern)
     else:
-        # Fallback: search for T_ext-like column
+        # Fallback: search for the ambient column (T_ext, or Towb on Frontier)
         for col in df.columns:
-            if 't_ext' in col.lower() and col not in result['input_cols']:
+            if is_ambient_col(col) and col not in result['input_cols']:
                 result['input_cols'].append(col)
                 break
     
@@ -242,7 +243,7 @@ def build_domain_column_info(
         input_cols.append(t_ext_pattern)
     else:
         for col in df.columns:
-            if 't_ext' in col.lower() and col not in input_cols:
+            if is_ambient_col(col) and col not in input_cols:
                 input_cols.append(col)
                 break
     
@@ -368,7 +369,7 @@ def build_federated_column_info(
         result['input_cols'].append(t_ext_pattern)
     else:
         for col in df.columns:
-            if 't_ext' in col.lower() and col not in result['input_cols']:
+            if is_ambient_col(col) and col not in result['input_cols']:
                 result['input_cols'].append(col)
                 break
     

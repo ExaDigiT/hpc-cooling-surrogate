@@ -20,6 +20,7 @@ from dask import delayed
 from dask.distributed import Client, LocalCluster
 
 from raps.config import ConfigManager
+from fmu2ml.config.fmu_io import FMUInputSpec, is_ambient_col
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +66,8 @@ class NonlinearAnalyzer:
         self.memory_limit = memory_limit
         self.max_polynomial_degree = max_polynomial_degree
         
-        self.input_vars = ['Q_flow', 'T_Air', 'T_ext']
+        # Q_flow[, T_Air], T_ext: T_Air only where the FMU has it (not Frontier)
+        self.input_vars = FMUInputSpec.from_config(self.config).input_vars()
         self.output_vars = [
             'V_flow_prim_GPM', 'V_flow_sec_GPM', 'W_flow_CDUP_kW',
             'T_prim_s_C', 'T_prim_r_C', 'T_sec_s_C', 'T_sec_r_C',
@@ -138,19 +140,21 @@ class NonlinearAnalyzer:
 
             if cdu_idx == 1:
                 prepared_data['inputs']['Q_flow'] = data[q_flow_col].values.reshape(-1, 1)
-                prepared_data['inputs']['T_Air'] = data[t_air_col].values.reshape(-1, 1)
+                if 'T_Air' in self.input_vars:
+                    prepared_data['inputs']['T_Air'] = data[t_air_col].values.reshape(-1, 1)
             else:
                 prepared_data['inputs']['Q_flow'] = np.hstack([
                     prepared_data['inputs']['Q_flow'],
                     data[q_flow_col].values.reshape(-1, 1)
                 ])
-                prepared_data['inputs']['T_Air'] = np.hstack([
-                    prepared_data['inputs']['T_Air'],
-                    data[t_air_col].values.reshape(-1, 1)
-                ])
+                if 'T_Air' in self.input_vars:
+                    prepared_data['inputs']['T_Air'] = np.hstack([
+                        prepared_data['inputs']['T_Air'],
+                        data[t_air_col].values.reshape(-1, 1)
+                    ])
         
         # T_ext is common for all CDUs
-        t_ext_col = 'simulator_1_centralEnergyPlant_1_coolingTowerLoop_1_sources_T_ext'
+        t_ext_col = next(c for c in data.columns if is_ambient_col(c))
         prepared_data['inputs']['T_ext'] = data[t_ext_col].values
         
         # Aggregate CDU-level outputs

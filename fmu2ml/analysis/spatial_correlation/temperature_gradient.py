@@ -123,6 +123,14 @@ class TemperatureGradientAnalyzer:
 
         # Filter for existing columns to avoid KeyError
         t_air_cols = [col for col in t_air_cols_expected if col in df.columns]
+        # FMUs without a T_Air input (Frontier): use the rack supply
+        # temperature, already in degC, as the per-CDU inlet instead.
+        inlet_offset_k = 273.15
+        if not t_air_cols:
+            t_air_cols = [f'simulator[1].datacenter[1].computeBlock[{i}].cdu[1].summary.T_sec_s_C'
+                          for i in range(1, self.n_cdus + 1)]
+            t_air_cols = [col for col in t_air_cols if col in df.columns]
+            inlet_offset_k = 0.0
         t_outlet_cols = [col for col in t_outlet_cols_expected if col in df.columns]
         q_flow_cols = [col for col in q_flow_cols_expected if col in df.columns]
 
@@ -145,7 +153,7 @@ class TemperatureGradientAnalyzer:
 
         # Store data
         self.data = {
-            'T_inlet': df[t_air_cols].values - 273.15,
+            'T_inlet': df[t_air_cols].values - inlet_offset_k,
             'T_outlet': df[t_outlet_cols].values,
             'Q_flow': df[q_flow_cols].values if q_flow_cols else None,
             'inlet_cols': t_air_cols,

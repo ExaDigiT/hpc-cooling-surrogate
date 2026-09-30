@@ -5,6 +5,7 @@ from scipy.stats import qmc
 from datetime import datetime, timedelta
 from typing import Dict, Tuple, Optional
 import os
+from fmu2ml.config.fmu_io import FMUInputSpec
 
 
 class TemperatureGenerator:
@@ -193,8 +194,14 @@ class TemperatureGenerator:
         
         fmu_data = {}
         
+        # Column layout (ambient input name, T_Air present or not) per system
+        n_cdus = len([col for col in temps_df.columns if col.startswith('CDU_')])
+        spec = (FMUInputSpec.from_config(self.config, n_cdus=n_cdus)
+                if self.config and 'NUM_CDUS' in self.config
+                else FMUInputSpec(n_cdus=n_cdus))
+
         # Add external temperature
-        fmu_data['simulator_1_centralEnergyPlant_1_coolingTowerLoop_1_sources_T_ext'] = temps_df['T_ext'].values
+        fmu_data[spec.t_ext_col] = temps_df['T_ext'].values
         
         # Get actual CDU columns
         cdu_columns = sorted([col for col in temps_df.columns if col.startswith('CDU_')])
@@ -203,13 +210,12 @@ class TemperatureGenerator:
         for cdu_name in cdu_columns:
             cdu_num = int(cdu_name.split('_')[1])
             
-            if cdu_name in temps_df.columns:
-                col_name = f'simulator_1_datacenter_1_computeBlock_{cdu_num}_cabinet_1_sources_T_Air'
-                fmu_data[col_name] = temps_df[cdu_name].values
+            if cdu_name in temps_df.columns and spec.has_t_air:
+                fmu_data[spec.t_air_col(cdu_num)] = temps_df[cdu_name].values
             
             if cdu_name in power_df.columns:
-                col_name = f'simulator_1_datacenter_1_computeBlock_{cdu_num}_cabinet_1_sources_Q_flow_total'
-                fmu_data[col_name] = power_df[cdu_name].values
+                fmu_data[spec.q_flow_col(cdu_num)] = \
+                    spec.q_flow_per_cabinet(power_df[cdu_name].values)
         
         fmu_input = pd.DataFrame(fmu_data, index=temps_df.index)
             

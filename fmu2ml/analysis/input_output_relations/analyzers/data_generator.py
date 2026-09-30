@@ -7,6 +7,7 @@ import multiprocessing as mp
 from functools import partial
 
 from raps.config import ConfigManager
+from fmu2ml.config.fmu_io import FMUInputSpec, is_ambient_col, with_placeholder_t_air
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +75,7 @@ def _simulate_grid_point(
         # Run simulation WITHOUT additional stabilization phase
         # (we're already including stabilization in our input data)
         result = simulator.run_simulation(
-            input_data=input_df,
+            input_data=FMUInputSpec.from_config(simulator.config).adapt_frame(input_df),
             stabilization_hours=0,  # No separate stabilization - we handle it in input_df
             step_size=step_size,
             save_history=False,
@@ -227,6 +228,8 @@ class DataGenerator:
         logger.info(f"  Transition steps between conditions: {transition_steps}")
         logger.info(f"  Distribute across CDUs: {distribute_across_cdus}")
         
+        input_ranges = with_placeholder_t_air(input_ranges)
+        
         if input_ranges is None:
             input_ranges = {
                 'Q_flow': (50.0, 200.0),  # kW
@@ -292,7 +295,7 @@ class DataGenerator:
         
         try:
             results_df = self.simulator.run_simulation(
-                input_data=input_df,
+                input_data=FMUInputSpec.from_config(self.simulator.config).adapt_frame(input_df),
                 stabilization_hours=stabilization_hours,
                 step_size=step_size,
                 save_history=False
@@ -363,7 +366,7 @@ class DataGenerator:
                 # Run simulation for this batch
                 # The FMU simulator maintains internal state between calls
                 batch_results = self.simulator.run_simulation(
-                    input_data=batch_input,
+                    input_data=FMUInputSpec.from_config(self.simulator.config).adapt_frame(batch_input),
                     stabilization_hours=stab_hours,
                     step_size=step_size,
                     save_history=False,
@@ -754,7 +757,7 @@ class DataGenerator:
                 # Reset state and run without separate stabilization
                 # (stabilization is included in our input data)
                 result = self.simulator.run_simulation(
-                    input_data=input_df,
+                    input_data=FMUInputSpec.from_config(self.simulator.config).adapt_frame(input_df),
                     stabilization_hours=0,  # Already included in input_df
                     step_size=step_size,
                     save_history=False,

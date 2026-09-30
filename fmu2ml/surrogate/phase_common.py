@@ -38,9 +38,11 @@ USAGE
 
 Run the notebooks from surrogate_models/. Artifacts land in ``runs/<run_id>/``
 relative to the working directory, so a rerun never overwrites the reported
-runs kept in ``surrogate_models/<run_id>/``. Data comes from ``PHASE_DATA_DIR``
-(default ``<root>/summit/data/systematic-720``, where ``<root>`` is
-``../../../`` from the notebooks). Before launching several phases in
+runs kept in ``surrogate_models/<run_id>/``. The system comes from
+``PHASE_SYSTEM`` (default ``summit``, the reported runs), which sets the CDU
+count and FMU input columns from ``config/<system>/``. Data comes from
+``PHASE_DATA_DIR`` (default ``<root>/<system>/data/systematic-720``, where
+``<root>`` is ``../../../`` from the notebooks). Before launching several phases in
 parallel, build the store once with
 ``python -m fmu2ml.surrogate.phase_common --prewarm``.
 """
@@ -63,6 +65,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from fmu2ml.config.fmu_io import FMUInputSpec
+
 # This module lives in <repo>/fmu2ml/surrogate/. Resolve paths from here rather
 # than from the caller's cwd: the phase notebooks, `python -m
 # fmu2ml.surrogate.phase_common` and any launcher then all agree on where the
@@ -70,7 +74,7 @@ import pandas as pd
 #
 #     <root>/sc-conf/<repo>/fmu2ml/surrogate/    this file (the library)
 #     <root>/sc-conf/<repo>/surrogate_models/    the phase notebooks
-#     <root>/summit/data/systematic-720/         the data (chunk_<id>/ folders)
+#     <root>/<system>/data/systematic-720/       the data (chunk_<id>/ folders)
 #
 # abspath, not resolve(): keep symlinked Lustre paths as the user sees them, so
 # "three levels up" means the same thing here as it does in a shell.
@@ -87,11 +91,19 @@ WORKSPACE_ROOT = REPO_ROOT.parents[1]
 # run_21b.py exactly (systematic-720, 128 chunks, seeded 80/10/10 ratio split)
 # so the phase table and MR-MIONet are scored on the SAME task and the same
 # held-out chunks — that comparability is the whole point of these baselines.
-# Default: <root>/summit/data/systematic-720 (see the layout above), the data
-# the reported runs used. Override with PHASE_DATA_DIR.
+# System under study. The task spec below (rates, look-backs, horizons, head
+# weights) was derived from the Summit data analysis; for another system only
+# the CDU count and input columns change here, so re-derive the rest from that
+# system's own analysis before reading anything into a cross-system comparison.
+SYSTEM = os.environ.get("PHASE_SYSTEM", "summit")
+FMU_INPUTS = FMUInputSpec.from_config_dir(REPO_ROOT / "config" / SYSTEM)
+NUM_CDUS = FMU_INPUTS.n_cdus
+
+# Default: <root>/<system>/data/systematic-720 (see the layout above); for
+# summit, the data the reported runs used. Override with PHASE_DATA_DIR.
 DATA_DIR = os.environ.get(
     "PHASE_DATA_DIR",
-    str(WORKSPACE_ROOT / "summit" / "data" / "systematic-720"))
+    str(WORKSPACE_ROOT / SYSTEM / "data" / "systematic-720"))
 STORE_DIR = os.environ.get("PHASE_STORE_DIR", os.path.join(DATA_DIR, "store"))
 
 N_CHUNKS = int(os.environ.get("PHASE_N_CHUNKS", 128))
@@ -256,11 +268,9 @@ GROUP_UNITS = {"G_T": "°C", "G_V": "GPM", "G_Vs": "GPM",
 SUF = {"G_T": "T", "G_V": "V", "G_p": "p",
        "G_Vs": "Vs", "G_ps": "ps", "G_W": "W"}
 
-INPUT_PATTERNS = {
-    "Q_flow": "simulator_1_datacenter_1_computeBlock_{}_cabinet_1_sources_Q_flow_total",
-    "T_Air": "simulator_1_datacenter_1_computeBlock_{}_cabinet_1_sources_T_Air",
-    "T_ext": "simulator_1_centralEnergyPlant_1_coolingTowerLoop_1_sources_T_ext",
-}
+# Q_flow and T_Air per CDU (T_Air absent on Frontier), then the plant-wide
+# ambient input under the "T_ext" key (named ..._Towb on Frontier).
+INPUT_PATTERNS = FMU_INPUTS.input_patterns()
 _S = "simulator[1].datacenter[1].computeBlock[{}].cdu[1].summary."
 OUTPUT_PATTERNS = {
     "T_prim_s": _S + "T_prim_s_C",   "T_prim_r": _S + "T_prim_r_C",
@@ -284,7 +294,7 @@ def first_chunk_file() -> str:
     found = _store.discover_chunk_files(DATA_DIR)
     if found:
         return found[0][1]
-    data_root = WORKSPACE_ROOT / "summit" / "data"
+    data_root = WORKSPACE_ROOT / SYSTEM / "data"
     candidates = (sorted(p.name for p in data_root.iterdir()
                          if p.is_dir() and any(p.glob("chunk_*")))
                   if data_root.is_dir() else [])
@@ -500,9 +510,9 @@ def task_kwargs(**overrides: Any) -> Dict[str, Any]:
     overridden here breaks comparability, so do it deliberately.
     """
     spec = dict(
-        system_name="summit",
-        num_cdus=257,
-        cdu_ids=list(range(1, 258)),
+        system_name=SYSTEM,
+        num_cdus=NUM_CDUS,
+        cdu_ids=list(range(1, NUM_CDUS + 1)),
 
         history_steps=HISTORY,
         prediction_steps=PREDICT_K,

@@ -14,6 +14,7 @@ except ImportError:
 
 from fmu2ml.data.processors.normalization import NormalizationHandler
 from raps.config import ConfigManager
+from fmu2ml.config.fmu_io import FMUInputSpec
 
 class DatacenterCoolingDataset(Dataset):
     """
@@ -126,14 +127,7 @@ class DatacenterCoolingDataset(Dataset):
     
     def _get_input_columns(self) -> List[str]:
         """Get input column names"""
-        cols = []
-        # CDU inputs
-        for i in range(1, self.num_cdus + 1):
-            cols.append(f'simulator_1_datacenter_1_computeBlock_{i}_cabinet_1_sources_Q_flow_total')
-            cols.append(f'simulator_1_datacenter_1_computeBlock_{i}_cabinet_1_sources_T_Air')
-        # Global input
-        cols.append('simulator_1_centralEnergyPlant_1_coolingTowerLoop_1_sources_T_ext')
-        return cols
+        return FMUInputSpec.from_config(self.config).input_columns()
     
     def _get_output_columns(self) -> List[str]:
         """Get output column names"""

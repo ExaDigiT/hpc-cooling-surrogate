@@ -17,6 +17,7 @@ from .scenario_definitions import (
     ScenarioSpec, ScenarioType, Phase, OperatingPoint
 )
 from .scenario_sequencer import SequencedScenario
+from fmu2ml.config.fmu_io import FMUInputSpec
 
 
 @dataclass
@@ -966,27 +967,44 @@ class InputSequenceBuilder:
         
         return sequenced
     
-    def format_for_fmu(self, multi_cdu_df: pd.DataFrame) -> pd.DataFrame:
-        """Convert to FMU input format."""
-        fmu_data = {}
-        
-        # External temperature (SHARED across all CDUs)
-        fmu_data['simulator_1_centralEnergyPlant_1_coolingTowerLoop_1_sources_T_ext'] = \
-            multi_cdu_df['t_ext_k'].values
-        
-        for col in multi_cdu_df.columns:
-            if '_q_flow_w' in col:
-                cdu_name = col.replace('_q_flow_w', '')
-                cdu_num = int(cdu_name.split('_')[1])
-                
-                fmu_col = f'simulator_1_datacenter_1_computeBlock_{cdu_num}_cabinet_1_sources_Q_flow_total'
-                fmu_data[fmu_col] = multi_cdu_df[col].values
-            
-            elif '_t_air_k' in col and '_phase' not in col and '_scenario' not in col:
-                cdu_name = col.replace('_t_air_k', '')
-                cdu_num = int(cdu_name.split('_')[1])
-                
-                fmu_col = f'simulator_1_datacenter_1_computeBlock_{cdu_num}_cabinet_1_sources_T_Air'
-                fmu_data[fmu_col] = multi_cdu_df[col].values
-        
-        return pd.DataFrame(fmu_data)
+    def format_for_fmu(
+        self,
+        multi_cdu_df: pd.DataFrame,
+        fmu_spec: Optional[FMUInputSpec] = None,
+    ) -> pd.DataFrame:
+        """Convert to FMU input format (POWER9 layout unless ``fmu_spec`` is given)."""
+        if fmu_spec is None:
+            fmu_spec = FMUInputSpec(n_cdus=self.config.n_cdus)
+        return format_multi_cdu_for_fmu(multi_cdu_df, fmu_spec)
+
+
+def format_multi_cdu_for_fmu(multi_cdu_df: pd.DataFrame, fmu_spec: FMUInputSpec) -> pd.DataFrame:
+    """
+    Convert a raw multi-CDU frame (``t_ext_k``, ``cdu_<n>_q_flow_w``,
+    ``cdu_<n>_t_air_k``) to the FMU's input columns.
+
+    ``T_Air`` columns are dropped for FMUs without that input, and the per-CDU
+    heat load is split per cabinet as RAPS does (see ``FMUInputSpec``).
+    """
+    fmu_data = {}
+
+    # External temperature (SHARED across all CDUs)
+    fmu_data[fmu_spec.t_ext_col] = multi_cdu_df['t_ext_k'].values
+
+    for col in multi_cdu_df.columns:
+        if '_q_flow_w' in col:
+            cdu_name = col.replace('_q_flow_w', '')
+            cdu_num = int(cdu_name.split('_')[1])
+
+            fmu_data[fmu_spec.q_flow_col(cdu_num)] = \
+                fmu_spec.q_flow_per_cabinet(multi_cdu_df[col].values)
+
+        elif '_t_air_k' in col and '_phase' not in col and '_scenario' not in col:
+            if not fmu_spec.has_t_air:
+                continue
+            cdu_name = col.replace('_t_air_k', '')
+            cdu_num = int(cdu_name.split('_')[1])
+
+            fmu_data[fmu_spec.t_air_col(cdu_num)] = multi_cdu_df[col].values
+
+    return pd.DataFrame(fmu_data)

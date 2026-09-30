@@ -14,6 +14,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from fmu2ml.config.fmu_io import is_ambient_col
 from .configs import PhysicsInformedConfig, FederatedConfig
 from .federated import FederatedDeepMMNet
 
@@ -145,7 +146,7 @@ class PredictionToPhysics:
                 self.q_flow_input_indices.append(i)
             elif 't_air' in col_lower:
                 self.t_air_input_indices.append(i)
-            elif 't_ext' in col_lower:
+            elif is_ambient_col(col):
                 self.t_ext_input_idx = i
 
         # Pre-compute delta scales as tensor for fast conversion (rate-aware)

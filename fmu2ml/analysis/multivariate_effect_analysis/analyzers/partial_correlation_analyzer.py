@@ -16,6 +16,7 @@ from dask import delayed
 from dask.distributed import Client, LocalCluster
 
 from raps.config import ConfigManager
+from fmu2ml.config.fmu_io import FMUInputSpec, is_ambient_col
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +67,8 @@ class PartialCorrelationAnalyzer:
         self.edge_threshold = edge_threshold
         self.method = method
         
-        self.input_vars = ['Q_flow', 'T_Air', 'T_ext']
+        # Q_flow[, T_Air], T_ext: T_Air only where the FMU has it (not Frontier)
+        self.input_vars = FMUInputSpec.from_config(self.config).input_vars()
         self.output_vars = [
             'V_flow_prim_GPM', 'V_flow_sec_GPM', 'W_flow_CDUP_kW',
             'T_prim_s_C', 'T_prim_r_C', 'T_sec_s_C', 'T_sec_r_C',
@@ -137,7 +139,7 @@ class PartialCorrelationAnalyzer:
                     prepared['inputs']['T_Air'] = data[t_air_cols].mean(axis=1).values
                     
             elif input_var == 'T_ext':
-                t_ext_cols = [col for col in data.columns if 'T_ext' in col]
+                t_ext_cols = [col for col in data.columns if is_ambient_col(col)]
                 if t_ext_cols:
                     prepared['inputs']['T_ext'] = data[t_ext_cols].mean(axis=1).values
         

@@ -17,6 +17,7 @@ from functools import partial
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 from raps.config import ConfigManager
+from fmu2ml.config.fmu_io import FMUInputSpec, is_ambient_col, with_placeholder_t_air
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ def _run_single_scenario(
         )
         
         results = simulator.run_simulation(
-            input_data=input_data,
+            input_data=FMUInputSpec.from_config(simulator.config).adapt_frame(input_data),
             stabilization_hours=stabilization_hours,
             step_size=step_size,
             save_history=False
@@ -266,6 +267,8 @@ class DynamicDataGenerator:
         """
         logger.info(f"Generating step response data with {n_steps} steps per input...")
         
+        input_ranges = with_placeholder_t_air(input_ranges)
+        
         if input_ranges is None:
             input_ranges = {
                 'Q_flow': (50.0, 200.0),  # kW
@@ -344,6 +347,8 @@ class DynamicDataGenerator:
             DataFrame with simulation results
         """
         logger.info(f"Generating ramp data with {n_ramps} ramps per input...")
+        
+        input_ranges = with_placeholder_t_air(input_ranges)
         
         if input_ranges is None:
             input_ranges = {
@@ -445,6 +450,8 @@ class DynamicDataGenerator:
         n_samples = max(n_samples, self.min_steps)
         logger.info(f"Generating varying rate data with {n_samples} samples...")
         
+        input_ranges = with_placeholder_t_air(input_ranges)
+        
         if input_ranges is None:
             input_ranges = {
                 'Q_flow': (50.0, 200.0),
@@ -524,6 +531,8 @@ class DynamicDataGenerator:
         """
         n_samples = max(n_samples, self.min_steps)
         logger.info(f"Generating combined dynamic data with {n_samples} total samples...")
+        
+        input_ranges = with_placeholder_t_air(input_ranges)
         
         if input_ranges is None:
             input_ranges = {
@@ -653,6 +662,8 @@ class DynamicDataGenerator:
         steps_per_scenario = max(steps_per_scenario, self.min_steps // n_scenarios + 1)
         
         logger.info(f"Generating {n_scenarios} parallel scenarios, {steps_per_scenario} steps each...")
+        
+        input_ranges = with_placeholder_t_air(input_ranges)
         
         if input_ranges is None:
             input_ranges = {
@@ -896,7 +907,7 @@ class DynamicDataGenerator:
             )
             
             results = simulator.run_simulation(
-                input_data=input_df,
+                input_data=FMUInputSpec.from_config(simulator.config).adapt_frame(input_df),
                 stabilization_hours=stabilization_hours,
                 step_size=step_size,
                 save_history=False

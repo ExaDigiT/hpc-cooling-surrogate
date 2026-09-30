@@ -4,6 +4,8 @@ from typing import List, Optional
 import logging
 from datetime import datetime, timedelta
 
+from fmu2ml.config.fmu_io import FMUInputSpec, is_ambient_col
+
 
 class InputFormatter:
     """
@@ -17,17 +19,20 @@ class InputFormatter:
     - Data structure formatting
     """
     
-    def __init__(self, num_cdus: int = 49, timestep: float = 60.0):
+    def __init__(self, num_cdus: int = 49, timestep: float = 60.0,
+                 fmu_spec: Optional[FMUInputSpec] = None):
         """
         Initialize input formatter
         
         Args:
             num_cdus: Number of CDUs in the system
             timestep: Timestep in seconds
+            fmu_spec: FMU input layout (default: POWER9 layout with T_Air)
         """
         self.logger = logging.getLogger(__name__)
         self.num_cdus = num_cdus
         self.timestep = timestep
+        self.fmu_spec = fmu_spec or FMUInputSpec(n_cdus=num_cdus)
         
         self.logger.info(f"Input formatter initialized: {num_cdus} CDUs, {timestep}s timestep")
     
@@ -41,7 +46,8 @@ class InputFormatter:
         Format power data into FMU input structure
         
         Args:
-            power_data: Array of shape (n_timesteps, n_cdus) with power values in Watts
+            power_data: Array of shape (n_timesteps, n_cdus) with per-CDU heat load in Watts
+                (split per cabinet for the FMU, see FMUInputSpec.q_flow_per_cabinet)
             timestamps: Optional timestamps array
             start_time: Start time if timestamps not provided
             
@@ -60,11 +66,10 @@ class InputFormatter:
             raise ValueError(f"Expected {self.num_cdus} CDUs, got {n_cdus}")
         
         # Create column names using proper simulator format
-        power_cols = [f'simulator_1_datacenter_1_computeBlock_{i}_cabinet_1_sources_Q_flow_total' 
-                     for i in range(1, self.num_cdus + 1)]
+        power_cols = [self.fmu_spec.q_flow_col(i) for i in range(1, self.num_cdus + 1)]
         
         # Create DataFrame
-        df = pd.DataFrame(power_data, columns=power_cols)
+        df = pd.DataFrame(self.fmu_spec.q_flow_per_cabinet(power_data), columns=power_cols)
         
         # Add time column
         if timestamps is not None:
@@ -80,7 +85,7 @@ class InputFormatter:
     
     def format_temperature_data(
         self,
-        air_temperature_data: np.ndarray,
+        air_temperature_data: Optional[np.ndarray],
         external_temperature: np.ndarray,
         timestamps: Optional[np.ndarray] = None,
         start_time: float = 0.0
@@ -89,7 +94,8 @@ class InputFormatter:
         Format temperature data (air temperatures per CDU + external temperature)
         
         Args:
-            air_temperature_data: Array of shape (n_timesteps, n_cdus) with air temperatures in Kelvin
+            air_temperature_data: Array of shape (n_timesteps, n_cdus) with air temperatures in Kelvin,
+                or None for FMUs without a T_Air input (ignored for those FMUs)
             external_temperature: Array of shape (n_timesteps,) with external temperature in Kelvin
             timestamps: Optional timestamps array
             start_time: Start time if timestamps not provided
@@ -97,6 +103,10 @@ class InputFormatter:
         Returns:
             DataFrame with 'time', air temperature columns, and 'T_ext' column
         """
+        n_timesteps = len(external_temperature)
+        if not self.fmu_spec.has_t_air:
+            air_temperature_data = np.empty((n_timesteps, 0))
+        
         self.logger.debug(f"Formatting temperature data: shape={air_temperature_data.shape}")
         
         # Validate shape
@@ -105,7 +115,7 @@ class InputFormatter:
         
         n_timesteps, n_cdus = air_temperature_data.shape
         
-        if n_cdus != self.num_cdus:
+        if self.fmu_spec.has_t_air and n_cdus != self.num_cdus:
             raise ValueError(f"Expected {self.num_cdus} CDUs, got {n_cdus}")
         
         if len(external_temperature) != n_timesteps:
@@ -113,14 +123,14 @@ class InputFormatter:
                            f"doesn't match timesteps {n_timesteps}")
         
         # Create column names for air temperatures
-        air_temp_cols = [f'simulator_1_datacenter_1_computeBlock_{i}_cabinet_1_sources_T_Air' 
-                        for i in range(1, self.num_cdus + 1)]
+        air_temp_cols = ([self.fmu_spec.t_air_col(i) for i in range(1, self.num_cdus + 1)]
+                         if self.fmu_spec.has_t_air else [])
         
         # Create DataFrame
         df = pd.DataFrame(air_temperature_data, columns=air_temp_cols)
         
         # Add external temperature
-        df['simulator_1_centralEnergyPlant_1_coolingTowerLoop_1_sources_T_ext'] = external_temperature
+        df[self.fmu_spec.t_ext_col] = external_temperature
         
         # Add time column
         if timestamps is not None:
@@ -129,7 +139,7 @@ class InputFormatter:
             df['time'] = start_time + np.arange(n_timesteps) * self.timestep
         
         # Reorder columns (time first)
-        cols = ['time'] + air_temp_cols + ['simulator_1_centralEnergyPlant_1_coolingTowerLoop_1_sources_T_ext']
+        cols = ['time'] + air_temp_cols + [self.fmu_spec.t_ext_col]
         df = df[cols]
         
         return df
@@ -194,7 +204,7 @@ class InputFormatter:
             raise ValueError(f"Unsupported power unit: {power_unit}")
         
         # Convert temperature to Kelvin
-        temp_cols = [col for col in df.columns if 'T_Air' in col or 'T_ext' in col]
+        temp_cols = [col for col in df.columns if 'T_Air' in col or is_ambient_col(col)]
         
         if temperature_unit == 'C':
             df[temp_cols] = df[temp_cols] + 273.15

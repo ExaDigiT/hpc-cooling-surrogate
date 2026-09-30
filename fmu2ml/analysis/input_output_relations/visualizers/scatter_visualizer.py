@@ -99,7 +99,8 @@ def create_scatter_plots(
     """Create scatter plots with regression lines for all pairs using parallel processing."""
     logger.info("Creating scatter plots in parallel...")
     
-    input_vars = ['Q_flow', 'T_Air', 'T_ext']
+    # T_Air is absent for FMUs without that input (Frontier)
+    input_vars = [v for v in ['Q_flow', 'T_Air', 'T_ext'] if v in prepared_data['inputs']]
     output_vars = list(metrics_df['output'].unique())
     
     # Prepare arguments for parallel processing

@@ -25,7 +25,8 @@ from .scenario_definitions import (
     OperatingPoint
 )
 from .scenario_sequencer import ScenarioSequencer, SequencedScenario
-from .input_sequence_builder import InputSequenceBuilder, InputConfig
+from .input_sequence_builder import InputSequenceBuilder, InputConfig, format_multi_cdu_for_fmu
+from fmu2ml.config.fmu_io import FMUInputSpec
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -97,6 +98,8 @@ class SystematicInputGenerator:
         )
         
         self.builder = InputSequenceBuilder(self.input_config)
+        self.fmu_spec = FMUInputSpec.from_config(config, n_cdus=n_cdus) \
+            if 'NUM_CDUS' in config else FMUInputSpec(n_cdus=n_cdus)
     
     def generate(
         self,
@@ -300,30 +303,7 @@ class SystematicInputGenerator:
         """
         Convert to FMU input format with correct column names.
         """
-        fmu_data = {}
-        
-        # External temperature (shared across all CDUs)
-        fmu_data['simulator_1_centralEnergyPlant_1_coolingTowerLoop_1_sources_T_ext'] = \
-            multi_cdu_df['t_ext_k'].values
-        
-        # CDU data with correct FMU column names
-        for col in multi_cdu_df.columns:
-            if '_q_flow_w' in col:
-                cdu_name = col.replace('_q_flow_w', '')
-                cdu_num = int(cdu_name.split('_')[1])
-                
-                fmu_col = f'simulator_1_datacenter_1_computeBlock_{cdu_num}_cabinet_1_sources_Q_flow_total'
-                fmu_data[fmu_col] = multi_cdu_df[col].values
-            
-            elif '_t_air_k' in col and '_phase' not in col and '_scenario' not in col:
-                cdu_name = col.replace('_t_air_k', '')
-                cdu_num = int(cdu_name.split('_')[1])
-                
-                fmu_col = f'simulator_1_datacenter_1_computeBlock_{cdu_num}_cabinet_1_sources_T_Air'
-                fmu_data[fmu_col] = multi_cdu_df[col].values
-        
-        return pd.DataFrame(fmu_data)
-
+        return format_multi_cdu_for_fmu(multi_cdu_df, self.fmu_spec)
 
 def generate_systematic_fmu_dataset(
     n_cdus: int = 49,
@@ -494,8 +474,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Generate systematic FMU input dataset"
     )
-    parser.add_argument("--n-cdus", type=int, default=49,
-                       help="Number of CDUs")
+    parser.add_argument("--n-cdus", type=int, default=None,
+                       help="Number of CDUs (default: NUM_CDUS of --system-name)")
     parser.add_argument("--duration-hours", type=int, default=None,
                        help="Maximum duration in hours (default: all scenarios)")
     parser.add_argument("--timestep-seconds", type=int, default=1,
@@ -529,6 +509,9 @@ if __name__ == "__main__":
     except ImportError:
         config = None
     
+    if args.n_cdus is None:
+        args.n_cdus = config['NUM_CDUS'] if config else 49
+
     result = generate_systematic_fmu_dataset(
         n_cdus=args.n_cdus,
         duration_hours=args.duration_hours,
