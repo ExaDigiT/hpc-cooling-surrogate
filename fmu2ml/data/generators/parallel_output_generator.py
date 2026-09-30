@@ -235,14 +235,16 @@ def main():
     # Create tasks
     tasks = []
     for chunk_id, chunk_dir in zip(chunk_ids, chunk_dirs):
-        tasks.append((
-            chunk_id,
-            chunk_dir,
-            chunk_dir,
-            args.system_name,
-            args.stabilization_hours,
-            args.stabilization_threshold,
-            args.step_size
+        # By keyword: a positional tuple here once swapped step_size and
+        # stabilization_threshold, silently simulating at 0.1 s steps.
+        tasks.append(dict(
+            chunk_id=chunk_id,
+            input_dir=chunk_dir,
+            output_dir=chunk_dir,
+            system_name=args.system_name,
+            stabilization_hours=args.stabilization_hours,
+            step_size=args.step_size,
+            stabilization_threshold=args.stabilization_threshold,
         ))
     
     # Run in parallel or sequentially
@@ -265,13 +267,13 @@ def main():
         
         # Use process pool with memory limits
         with concurrent.futures.ProcessPoolExecutor(max_workers=actual_workers) as executor:
-            futures = [executor.submit(process_chunk, *task) for task in tasks]
+            futures = [executor.submit(process_chunk, **task) for task in tasks]
             for future in concurrent.futures.as_completed(futures):
                 all_stats.append(future.result())
     else:
         logger.info("Starting sequential processing")
         for task in tasks:
-            stat = process_chunk(*task)
+            stat = process_chunk(**task)
             all_stats.append(stat)
     
     # Write summary
