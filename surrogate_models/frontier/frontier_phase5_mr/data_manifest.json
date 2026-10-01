@@ -1,0 +1,21 @@
+{
+  "train_chunks": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    7
+  ],
+  "val_chunks": [
+    5
+  ],
+  "test_chunks": [
+    0
+  ],
+  "windows": {
+    "train": 1968,
+    "val": 328,
+    "test": 328
+  }
+}

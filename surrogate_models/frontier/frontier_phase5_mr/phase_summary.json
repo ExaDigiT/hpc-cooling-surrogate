@@ -1,0 +1,72 @@
+{
+  "n_outputs": 275,
+  "mean_r2": 0.5659992668845437,
+  "median_r2": 0.8860654234886169,
+  "min_r2": -0.5533273220062256,
+  "beats_frac": 0.27636363636363637,
+  "mean_skill": -0.008481694044338397,
+  "groups": {
+    "G_T": {
+      "n": 100,
+      "horizon_s": 600,
+      "mean_r2": 0.1405314499139786,
+      "median_r2": -0.02548682689666748,
+      "beats": 24,
+      "beats_frac": 0.24,
+      "skill": -0.023414925533977303
+    },
+    "G_V": {
+      "n": 25,
+      "horizon_s": 60,
+      "mean_r2": 0.98184002161026,
+      "median_r2": 0.9826510548591614,
+      "beats": 0,
+      "beats_frac": 0.0,
+      "skill": 0.0
+    },
+    "G_p": {
+      "n": 50,
+      "horizon_s": 60,
+      "mean_r2": 0.9473087811470031,
+      "median_r2": 0.9473137557506561,
+      "beats": 50,
+      "beats_frac": 1.0,
+      "skill": 0.00843709353315671
+    },
+    "G_Vs": {
+      "n": 25,
+      "horizon_s": 60,
+      "mean_r2": 0.891651782989502,
+      "median_r2": 0.8945374488830566,
+      "beats": 0,
+      "beats_frac": 0.0,
+      "skill": 0.0
+    },
+    "G_ps": {
+      "n": 50,
+      "horizon_s": 60,
+      "mean_r2": 0.9213476371765137,
+      "median_r2": 0.9215457141399384,
+      "beats": 0,
+      "beats_frac": 0.0,
+      "skill": 0.0
+    },
+    "G_W": {
+      "n": 25,
+      "horizon_s": 600,
+      "mean_r2": 0.05306149482727051,
+      "median_r2": 0.013355553150177002,
+      "beats": 2,
+      "beats_frac": 0.08,
+      "skill": -0.016513119418126544
+    }
+  },
+  "run_id": "frontier_phase5_mr",
+  "phase": "5",
+  "arch": "federated",
+  "model": "FederatedDeepMMNet",
+  "n_params": 2273486,
+  "train_minutes": 2.45,
+  "best_epoch": 25,
+  "epochs_completed": 45
+}

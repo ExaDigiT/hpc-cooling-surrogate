@@ -1,0 +1,132 @@
+==========================================================================
+PHASE 5 — federated   [frontier_phase5_mr_200h]
+==========================================================================
+device: cuda:0
+multi_rate: True   store rates (s): [3, 30]
+group   rate(s)  history    K  window(s)  horizon(s)  branch
+G_T          30       40   20       1200         600  slow
+G_V           3      100   20        300          60  fast
+G_p           3      100   20        300          60  fast
+G_Vs          3      100   20        300          60  fast
+G_ps          3      100   20        300          60  fast
+G_W          30       40   20       1200         600  slow
+data dir: /home/w1b/exa/data/frontier/systematic-200
+
+============================================================
+COLUMN IDENTIFICATION (Federated)
+============================================================
+Input columns:              26
+Total dynamic outputs:      275
+  G_T  (temperatures):      100
+  G_V  (prim flow):         25
+  G_p  (prim pressure):     50
+  G_Vs (sec flow):          25
+  G_ps (sec pressure):      50
+  G_W  (pump power):        25
+  Per-type index maps:      11 types
+
+inputs: 26   dynamic outputs: 275
+[store] present, reusing: /home/w1b/exa/data/frontier/systematic-200/store
+[norm] loading shared normalizer: /home/w1b/exa/data/frontier/systematic-200/store/normalizer_shared.json
+FederatedNormalizer loaded from /home/w1b/exa/data/frontier/systematic-200/store/normalizer_shared.json
+loader workers: 8   batch: 256
+Federated store [chunk split]: train=[0, 2, 3, 5, 6, 7, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 22, 23] val=[4, 21] test=[1, 8, 13] | multi_rate=True rates=[3, 30]
+  windows: train=17974 val=1892 test=2838
+DATA MANIFEST: {'train_chunks': [0, 2, 3, 5, 6, 7, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 22, 23], 'val_chunks': [4, 21], 'test_chunks': [1, 8, 13], 'windows': {'train': 17974, 'val': 1892, 'test': 2838}}
+
+model: FederatedDeepMMNet   parameters: 2,273,486
+
+--------------------------------------------------------------------------
+TRAINING
+--------------------------------------------------------------------------
+
+======================================================================
+PER-HEAD LOSS NORMALISATION (persistence baseline)
+======================================================================
+  head       baseline    cfg_w    effective
+  G_T    3.993333e-03     1.00   2.5042e+02
+  G_V    2.065340e-03     0.00   0.0000e+00
+  G_p    2.764306e-03     1.00   3.6175e+02
+  G_Vs   4.315114e-03     0.00   0.0000e+00
+  G_ps   4.291548e-03     0.00   0.0000e+00
+  G_W    4.498793e-03     1.00   2.2228e+02
+
+
+======================================================================
+TRAINING — Phase 5: Federated DeepMMNet
+======================================================================
+
+======================================================================
+PHASE 1: Round-Robin Training (6 Decoder Heads)
+======================================================================
+
+Phase 1 early stopping at epoch 39
+Phase 1 best validation loss: 1.715336
+
+======================================================================
+PHASE 2: Joint Fine-Tuning (6 Heads)
+  Encoder LR: 0.001
+  Head LR:    0.0001
+======================================================================
+
+Phase 2 early stopping at epoch 25
+Phase 2 best validation loss: 1.715538
+Phase 2 (1.715538) worse than Phase 1 (1.715336) — restored Phase 1 weights.
+
+Total training time: 713.8s
+
+training done in 12.0 min   best val 1.715336 @ epoch 19
+FederatedNormalizer saved to runs/frontier_phase5_mr_200h/normalizer.json
+
+--------------------------------------------------------------------------
+EVALUATION (test split)
+--------------------------------------------------------------------------
+======================================================================
+RESULTS SUMMARY — frontier_phase5_mr_200h
+======================================================================
+
+--- All 275 Outputs ---
+  Mean/Median R²:    0.5157 / 0.9024
+  Min R²:            -0.4896
+  Beats Persistence: 168/275 (61.1%)
+  Mean Skill Score:  +0.2492
+
+--- Per Decoder Head Group ---
+
+  G_T (100 outputs, horizon 600s):
+    Mean/Median R²: 0.0631 / -0.2003   Beats: 93/100 (93.0%)   Skill: +0.2123   R²-margin: +3.02e-02
+
+  G_V (25 outputs, horizon 60s):
+    Mean/Median R²: 0.9764 / 0.9768   Beats: 0/25 (0.0%)   Skill: +0.0000   R²-margin: +0.00e+00
+
+  G_p (50 outputs, horizon 60s):
+    Mean/Median R²: 0.9971 / 0.9971   Beats: 50/50 (100.0%)   Skill: +0.9329   R²-margin: +5.26e-02
+
+  G_Vs (25 outputs, horizon 60s):
+    Mean/Median R²: 0.8604 / 0.8602   Beats: 0/25 (0.0%)   Skill: +0.0000   R²-margin: +0.00e+00
+
+  G_ps (50 outputs, horizon 60s):
+    Mean/Median R²: 0.9075 / 0.9063   Beats: 0/50 (0.0%)   Skill: +0.0000   R²-margin: +0.00e+00
+
+  G_W (25 outputs, horizon 600s):
+    Mean/Median R²: -0.2260 / -0.2364   Beats: 25/25 (100.0%)   Skill: +0.0267   R²-margin: +3.33e-02
+
+--- Per Output Type ---
+                 R²            RMSE     MAE Beats_Persistence Variance_Ratio
+               mean     min    mean    mean              mean           mean
+Output_Type                                                                 
+T_prim_r    -0.3086 -0.4896  4.9192  3.4357              0.84         0.9977
+T_prim_s     0.9835  0.9835  0.5024  0.2779              1.00         1.0027
+T_sec_r     -0.1937 -0.3706  4.8450  3.3543              0.88         0.9934
+T_sec_s     -0.2288 -0.3833  3.1611  2.2492              1.00         1.0178
+V_flow_prim  0.9764  0.9735  3.7720  2.7967              0.00         1.0001
+V_flow_sec   0.8604  0.8511  0.2870  0.1744              0.00         0.9997
+W_flow      -0.2260 -0.3763  0.0191  0.0136              1.00         0.9990
+p_prim_r     0.9950  0.9950  0.0787  0.0512              1.00         0.9992
+p_prim_s     0.9992  0.9992  0.0296  0.0204              1.00         1.0006
+p_sec_r      0.9058  0.8929  0.4959  0.2778              0.00         0.9999
+p_sec_s      0.9091  0.8958  0.4691  0.2612              0.00         0.9999
+report: runs/frontier_phase5_mr_200h/report.md
+
+total wall clock: 12.1 min
+artifacts: runs/frontier_phase5_mr_200h
