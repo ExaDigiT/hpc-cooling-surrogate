@@ -47,6 +47,7 @@ The five architectures agree on aggregate R² to within 0.0002 and separate only
 | `analysis_notebooks/` | Data analysis per system (`summit/`, `lassen/`, `marconi/`). |
 | `surrogate_models/` | Phase notebooks (`phase1_baseline_lstm.ipynb` … `phase5-grouped-deepmmnet.ipynb`), training scripts (`scripts/run_phase1.py` … `run_phase5.py`), the reported runs and the horizon/speedup evaluation. |
 | `config/`, `models/`, `raps/` | ExaDigiT system configurations, FMU assets and the RAPS interface. |
+| `docs/new-system-surrogate.md` | Step-by-step guide to building a surrogate for another system's FMU and running it in RAPS (worked through on Frontier). |
 
 ---
 
