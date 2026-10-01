@@ -34,8 +34,14 @@ Create `config/<system>/` with `system.json`, `power.json`, `scheduler.json` and
 | `NUM_CDUS`, `RACKS_PER_CDU` | system.json | must match the FMU's `computeBlock_<i>` count |
 | `MIN_POWER`, `MAX_POWER` | system.json | per-CDU heat in kW at idle and peak; sets the input range of the generated data |
 | `MIN_NORMAL_LOAD`, `MAX_NORMAL_LOAD` | system.json | fraction of the range for "normal" scenarios (0.4 / 0.6) |
-| `FMU_PATH` | cooling.json | e.g. `models/<system>/<name>.fmu` (the FMU is tracked in git like the others) |
+| `FMU_PATH` | cooling.json | e.g. `models/<system>/<name>.fmu`; check whether the FMU may be published before committing it (see below) |
 | `TEMPERATURE_KEYS` | cooling.json | every FMU temperature input: per-CDU `..._T_Air` (POWER9 FMUs only) and the plant-wide ambient input |
+
+The POWER9 FMUs (Summit, Lassen, Marconi100) are public in this repository. The
+Frontier FMU is not: it is gitignored at `models/frontier/`, so place
+`Simulator_olcf5_base.fmu` there yourself (it ships with RAPS's FMU models,
+locally `~/exa/raps/models/fmu-models/Frontier/`; ask the ExaDigiT team for
+access). Treat any new system's FMU the same way until its release is cleared.
 
 List the FMU's inputs first; they decide `TEMPERATURE_KEYS`:
 

@@ -224,3 +224,6 @@ __marimo__/
 # Phase run outputs (model.pt, normalizer, per-step arrays); reported runs are copied
 # without weights to surrogate_models/<run_id>/ or surrogate_models/frontier/<run_id>/
 surrogate_models/runs/
+
+# Frontier cooling FMU: not cleared for public release; obtain it separately
+models/frontier/

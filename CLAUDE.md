@@ -13,7 +13,9 @@ To build a surrogate for a new system, follow `docs/new-system-surrogate.md`
   `data/generators/` (systematic inputs, parallel FMU runs), `surrogate/`
   (architectures, store, training; `phase_common.py` holds the shared task spec).
 - `raps/`: a bundled copy of an old RAPS, used for FMU simulation. Not the real RAPS.
-- `config/<system>/`: system, power, scheduler, cooling JSON. `models/`: FMUs.
+- `config/<system>/`: system, power, scheduler, cooling JSON. `models/`: FMUs. The
+  POWER9 FMUs are tracked; the Frontier FMU is not (gitignored, not cleared for
+  public release): copy it to `models/frontier/Simulator_olcf5_base.fmu`.
 - `surrogate_models/scripts/`: `run_phase{1..5}.py`, `run_frontier_phase5.py`,
   `validate_dataset.py`, `task_spec_analysis.py`, `export_for_raps.py`.
 - `surrogate_models/<run_id>/`, `surrogate_models/frontier/<run_id>/`: reported
@@ -43,7 +45,7 @@ To build a surrogate for a new system, follow `docs/new-system-surrogate.md`
 ## Gotchas
 
 - `parallel_output_generator.py` once passed `step_size` and
-  `stabilization_threshold` swapped (fixed in 23fee90): datasets made with its
+  `stabilization_threshold` swapped (fixed in e2dbf9b): datasets made with its
   CLI before that ran at 0.1 s steps. Check the `time` column of any dataset.
 - RAPS cannot import `fmu2ml` (the bundled `raps/` shadows the real package);
   RAPS loads surrogates as TorchScript bundles from `export_for_raps.py`.
