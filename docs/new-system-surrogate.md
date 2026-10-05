@@ -97,13 +97,21 @@ python -m fmu2ml.data.generators.parallel_output_generator \
   started from an interactive session can be stopped when the session ends.
   `--resume` skips chunks that already have output.
 
-Known gap, fix before the next system: the systematic scenarios never hold the
-inputs constant (ambient moves about 0.5 K per 30 s, loads carry noise, and
-steady-state segments last 600 s). RAPS holds ambient constant and loads steady
-for hours, and the Frontier surrogate drifts after 15-30 min there (it learned
-that trends continue). The likely fix is data with long steady holds (1-2 h at
-fixed inputs, and ambient as steps rather than continuous motion), for example a
-larger `--steady-state-duration`; this has not been tested yet.
+Known gap: the original systematic scenarios never hold the inputs constant
+(ambient moves about 0.5 K per 30 s, loads carry noise, and steady-state
+segments last 600 s). RAPS holds ambient constant and loads steady for hours,
+and the Frontier surrogate drifts after 15-30 min there (it learned that trends
+continue). The generator now takes `--steady-state-duration 1800
+--t-ext-hold-minutes 60 120 --exact-t-ext-holds` for long exactly-constant
+ambient holds; whether this removes the drift in RAPS has not been shown yet.
+
+Limit the ambient range to what the system sees (`--t-ext-range-k MIN MAX`,
+default 265-315 K). The Marconi100 FMU produced non-physical states above about
+300 K (the primary return no warmer than the supply in 10% of rows at 301-304 K
+and 47% above 310 K); 268-298 K removed nearly all of them. Also check that the
+inputs RAPS sends are inside the training range: RAPS sends the wet-bulb
+temperature as `T_Air` on the POWER9 systems, which the generated `T_Air` did
+not cover for Marconi100 (see `surrogate_models/marconi100/README.md`).
 
 ## 4. Validate
 

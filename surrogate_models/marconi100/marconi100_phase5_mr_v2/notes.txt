@@ -1,0 +1,1 @@
+marconi100 (49 CDUs): Phase 5 grouped DeepMMNet, run_phase5.py config, head weights {'G_T': 1.0, 'G_V': 1.0, 'G_p': 1.0, 'G_Vs': 1.0, 'G_ps': 1.0, 'G_W': 1.0}, data systematic-200h-v2.
