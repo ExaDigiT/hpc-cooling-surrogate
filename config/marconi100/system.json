@@ -17,8 +17,8 @@
     "GPU_PEAK_FLOPS": 7.8E12,
     "CPU_FP_RATIO": 0.69,
     "GPU_FP_RATIO": 0.69,
-    "MIN_POWER": 0,
-    "MAX_POWER": 50,
+    "MIN_POWER": 11.0,
+    "MAX_POWER": 39.0,
     "MIN_NORMAL_LOAD": 0.4,
     "MAX_NORMAL_LOAD": 0.6
 }
