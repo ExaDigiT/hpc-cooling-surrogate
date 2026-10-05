@@ -43,6 +43,8 @@ def build_global_t_ext_schedule(
     t_ext_max_k: float = T_EXT_MAX_K,
     micro_sigma_k: float = 0.4,
     micro_tau_s: float = 600.0,
+    hold_minutes: Tuple[float, float] = (15.0, 45.0),
+    exact_holds: bool = False,
 ) -> Tuple[np.ndarray, List[Dict]]:
     """
     Compose a plant-wide ambient-temperature timeline from weather segments.
@@ -64,6 +66,12 @@ def build_global_t_ext_schedule(
     the whole signal is lightly smoothed (weather has no 1 Hz energy) and
     clipped to [t_ext_min_k, t_ext_max_k].
 
+    ``hold_minutes`` sets the hold-segment length range. With ``exact_holds``
+    the texture is left out of hold segments, so they are exactly constant:
+    RAPS runs at a fixed wet-bulb temperature for hours, which a surrogate
+    trained only on ever-moving ambient never sees (it then extrapolates trends
+    and drifts in closed loop). The defaults reproduce the original schedule.
+
     Returns
     -------
     (t_ext, segments) : the schedule array (n_steps,) and per-segment metadata
@@ -75,6 +83,7 @@ def build_global_t_ext_schedule(
 
     out = np.empty(n_steps, dtype=np.float64)
     segments: List[Dict] = []
+    holds: List[Tuple[int, int, float]] = []
     seg_types = ["hold", "front", "ramp", "diurnal", "excursion"]
 
     level = t_ext_min_k + span * rng.uniform(0.3, 0.7)
@@ -88,9 +97,11 @@ def build_global_t_ext_schedule(
         start = i
 
         if seg == "hold":
-            dur = int(rng.uniform(15, 45) * 60 / dt)
+            dur = int(rng.uniform(*hold_minutes) * 60 / dt)
             dur = min(dur, n_steps - i)
             out[i:i + dur] = level
+            if exact_holds:
+                holds.append((i, i + dur, level))
             i += dur
             to_level = level
 
@@ -162,6 +173,8 @@ def build_global_t_ext_schedule(
 
     # Weather has no 1 Hz energy: smooth on a ~1 min scale.
     out = gaussian_filter1d(out, sigma=max(60.0 / dt, 1.0))
+    for a, b, lvl in holds:
+        out[a:b] = lvl
     return np.clip(out, t_ext_min_k, t_ext_max_k), segments
 
 

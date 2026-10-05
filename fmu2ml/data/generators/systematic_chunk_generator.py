@@ -53,6 +53,7 @@ def generate_systematic_chunks(
     save_raw: bool = False,
     global_t_ext: bool = True,
     global_load_events: bool = True,
+    t_ext_options: Optional[Dict] = None,
 ) -> Dict:
     """
     Generate the full systematic sequence, then chop it into per-chunk input files.
@@ -121,6 +122,7 @@ def generate_systematic_chunks(
         independent_cdus=independent_cdus,
         global_t_ext=global_t_ext,
         global_load_events=global_load_events,
+        t_ext_options=t_ext_options,
     )
 
     fmu_df = result['fmu_input']
@@ -251,6 +253,13 @@ if __name__ == "__main__":
                         help="Use shared scenario sequence for all CDUs (legacy mode)")
     parser.add_argument("--save-raw", action="store_true",
                         help="Also save per-chunk raw phase/scenario frames")
+    parser.add_argument("--t-ext-hold-minutes", type=float, nargs=2, metavar=("MIN", "MAX"),
+                        default=None, help="Length range of ambient hold segments "
+                                           "(default 15 45)")
+    parser.add_argument("--t-ext-range-k", type=float, nargs=2, metavar=("MIN", "MAX"),
+                        default=None, help="Ambient T_ext range in K (default 265 315)")
+    parser.add_argument("--exact-t-ext-holds", action="store_true",
+                        help="Keep ambient holds exactly constant (no micro-weather texture)")
     args = parser.parse_args()
 
     result = generate_systematic_chunks(
@@ -268,6 +277,11 @@ if __name__ == "__main__":
         apply_jitter=not args.no_jitter,
         independent_cdus=not args.shared_mode,
         save_raw=args.save_raw,
+        t_ext_options={k: v for k, v in {
+            "hold_minutes": tuple(args.t_ext_hold_minutes) if args.t_ext_hold_minutes else None,
+            "exact_holds": args.exact_t_ext_holds or None,
+            "t_ext_min_k": args.t_ext_range_k[0] if args.t_ext_range_k else None,
+            "t_ext_max_k": args.t_ext_range_k[1] if args.t_ext_range_k else None}.items() if v is not None},
     )
 
     print(f"\n✓ Chopped a {result['total_hours']:.2f}h sequence into {result['num_chunks']} chunks")

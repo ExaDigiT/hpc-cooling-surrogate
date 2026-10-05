@@ -112,6 +112,7 @@ class SystematicInputGenerator:
         independent_cdus: bool = True,  # NEW: Enable independent CDU scenarios
         global_t_ext: bool = True,      # NEW: designed plant-wide T_ext schedule
         global_load_events: bool = True,  # NEW: correlated facility load events
+        t_ext_options: Optional[Dict] = None,  # kwargs for build_global_t_ext_schedule
     ) -> Tuple[pd.DataFrame, pd.DataFrame, List[ScenarioSpec]]:
         """
         Generate complete systematic input dataset.
@@ -187,7 +188,8 @@ class SystematicInputGenerator:
                 n_sched = int(total_duration_seconds / self.timestep_seconds * 1.25) + 1
                 if global_t_ext:
                     t_ext_schedule, t_ext_segments = build_global_t_ext_schedule(
-                        n_sched, self.timestep_seconds, seed=self.seed + 101)
+                        n_sched, self.timestep_seconds, seed=self.seed + 101,
+                        **(t_ext_options or {}))
                     schedule_meta['t_ext_segments'] = t_ext_segments
                     logger.info(f"   Global T_ext schedule: {len(t_ext_segments)} "
                                 f"weather segments")
@@ -321,6 +323,7 @@ def generate_systematic_fmu_dataset(
     independent_cdus: bool = True,  # NEW: default to independent mode
     global_t_ext: bool = True,      # NEW: designed plant-wide T_ext schedule
     global_load_events: bool = True,  # NEW: correlated facility load events
+    t_ext_options: Optional[Dict] = None,
 ) -> Dict:
     """
     Generate complete systematic FMU-compatible dataset.
@@ -407,6 +410,7 @@ def generate_systematic_fmu_dataset(
         independent_cdus=independent_cdus,
         global_t_ext=global_t_ext,
         global_load_events=global_load_events,
+        t_ext_options=t_ext_options,
     )
     
     # Save output if requested
